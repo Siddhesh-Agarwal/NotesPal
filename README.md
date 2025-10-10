@@ -1,0 +1,16 @@
+# NotesPal
+
+## Environment Variables
+
+### Backend
+
+```env
+DATABASE_URL="<POSTGRES_DATABASE_CONNECTION_STRING>"
+```
+
+### Frontend
+
+```env
+VITE_CLERK_PUBLISHABLE_KEY="<CLERK_PUBLISHABLE_KEY>"
+VITE_BACKEND_BASE_URL="<BACKEND_BASE_URL>"
+```
