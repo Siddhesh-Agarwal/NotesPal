@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/clerk-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeftIcon,
@@ -23,52 +24,21 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { getNoteFn, updateNoteFn } from "@/lib/api";
 import type { Note } from "@/types/note";
-import { BACKEND_BASE_URL, TAPE_COLORS } from "@/utils/const";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { TAPE_COLORS } from "@/utils/const";
 
 export const Route = createFileRoute("/notes/$noteId")({
   component: RouteComponent,
 });
 
-async function getNoteFn(
-  noteId: string,
-  userId: string,
-): Promise<Note | undefined> {
-  const response = await fetch(`${BACKEND_BASE_URL}/note/${userId}/${noteId}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch note: ${response.status}`);
-  }
-  return response.json();
-}
-
-async function updateNoteFn(
-  noteId: string,
-  userId: string,
-  note: { content: string; tapeColor: string },
-): Promise<void> {
-  const response = await fetch(`${BACKEND_BASE_URL}/note/${userId}/${noteId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      content: note.content,
-      tapeColor: note.tapeColor,
-    }),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to update note: ${response.status}`);
-  }
-}
-
 function RouteComponent() {
-  const { isLoaded, userId } = useAuth();
   const { noteId } = Route.useParams();
-  const { data } = useQuery({
+  const { isLoaded, userId } = useAuth();
+  const { data, isLoading } = useQuery({
     queryKey: ["note", noteId],
     queryFn: () => getNoteFn(noteId, userId || ""),
-    enabled: !!noteId && !!userId,
+    enabled: !!noteId,
   });
   const { mutate: updateNote } = useMutation({
     mutationFn: (note: { content: string; tapeColor: string }) =>
@@ -89,9 +59,9 @@ function RouteComponent() {
       content: note.content,
       tapeColor: note.tapeColor,
     });
-  }, [note?.content, note?.tapeColor]);
+  }, [note, updateNote]);
 
-  if (!isLoaded) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="flex items-center">
@@ -140,7 +110,7 @@ function RouteComponent() {
     <div className="min-h-screen bg-gradient-to-br from-chart-5 to-chart-4 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <Link to="/">
+          <Link to="/notes">
             <Button variant={"ghost"}>
               <ArrowLeftIcon size={20} />
             </Button>

@@ -13,7 +13,7 @@ export function NoteCard({
 }) {
   return (
     <div
-      className="rounded-sm shadow-lg p-6 pb-12 cursor-pointer transform hover:rotate-0 transition-all duration-200 hover:shadow-xl font-serif"
+      className="rounded-sm shadow-lg p-6 pb-12 aspect-square cursor-pointer transform hover:rotate-0 transition-all duration-200 hover:shadow-xl font-serif border border-gray-200 block bg-white"
       style={{
         backgroundImage:
           "repeating-linear-gradient(transparent, transparent 31px, #e5e7eb 31px, #e5e7eb 32px)",
@@ -28,8 +28,13 @@ export function NoteCard({
         className="absolute top-0 left-0 w-2 h-full opacity-30"
         style={{ backgroundColor: note.tapeColor }}
       />
-
-      <MarkdownPreview markdown={note.content} size="sm" />
+      <div className="max-h-[calc(100% - 60px)]">
+        <MarkdownPreview
+          markdown={note.content}
+          size="sm"
+          className="text-ellipsis overflow-hidden"
+        />
+      </div>
 
       <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
         <p className="text-xs text-gray-400">
@@ -38,10 +43,10 @@ export function NoteCard({
         <Button
           onClick={() => onDelete()}
           variant={"ghost"}
-          size={"icon"}
+          size={"icon-lg"}
           className="text-destructive hover:bg-destructive/90"
         >
-          <Trash2Icon size={16} />
+          <Trash2Icon />
         </Button>
       </div>
     </div>
