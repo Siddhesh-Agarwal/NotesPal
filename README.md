@@ -1,4 +1,4 @@
-# NotesPal
+# NotePal
 
 ## Environment Variables
 
@@ -6,6 +6,7 @@
 
 ```env
 DATABASE_URL="<POSTGRES_DATABASE_CONNECTION_STRING>"
+FRONTEND_URL="<FRONTEND_URL>"
 ```
 
 ### Frontend
