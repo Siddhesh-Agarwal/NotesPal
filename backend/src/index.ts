@@ -1,14 +1,15 @@
+import { env } from "cloudflare:workers";
 import { zValidator } from "@hono/zod-validator";
 import { Checkout } from "@polar-sh/hono";
 import { and, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
 import z from "zod";
 import { TAPE_COLORS } from "@/data";
 import { notesTable, userTable } from "@/db/schema";
-import { env } from "@/env";
+import { env as parsedEnv } from "@/env";
 import {
   createEncryptedNote,
   decryptNote,
@@ -18,10 +19,11 @@ import {
 } from "./lib/encrypt";
 
 const app = new Hono();
-const server = env.environment === "development" ? "sandbox" : "production";
+const envIsDev = parsedEnv.environment === "development";
+const server = envIsDev ? "sandbox" : "production";
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: parsedEnv.FRONTEND_URL,
     allowMethods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     maxAge: 86400,
@@ -29,12 +31,12 @@ app.use(
 );
 app.use(
   csrf({
-    origin: env.FRONTEND_URL,
+    origin: parsedEnv.FRONTEND_URL,
     secFetchSite: "same-origin",
   }),
 );
 
-const db = drizzle(env.DATABASE_URL);
+const db = drizzle(env.D1);
 
 const getByUserSchema = z.object({
   userId: z.string(),

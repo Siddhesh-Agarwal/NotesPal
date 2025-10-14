@@ -19,13 +19,13 @@
   //     "bucket_name": "my-bucket"
   //   }
   // ],
-  // "d1_databases": [
-  //   {
-  //     "binding": "MY_DB",
-  //     "database_name": "my-database",
-  //     "database_id": ""
-  //   }
-  // ],
+  "d1_databases": [
+    {
+      "binding": "D1",
+      "database_name": "notepal",
+      "database_id": "eecda733-7631-4939-a823-1df46ed2742f",
+    },
+  ],
   // "ai": {
   //   "binding": "AI"
   // },
