@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { Toaster } from "@/components/ui/sonner";
 import { metadata } from "@/data/meta";
 import appCss from "@/styles.css?url";
 
@@ -99,10 +100,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
         >
           {children}
+          <Toaster richColors position="bottom-right" />
           {import.meta.env.DEV && (
             <TanStackDevtools
               config={{
-                position: "bottom-right",
+                position: "bottom-left",
               }}
               plugins={[
                 {

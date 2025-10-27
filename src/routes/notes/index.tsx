@@ -2,6 +2,7 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
+  SignUpButton,
   UserButton,
   useUser,
 } from "@clerk/tanstack-react-start";
@@ -9,7 +10,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
-import { LogIn, PlusIcon, UserXIcon } from "lucide-react";
+import { LogIn, PlusIcon, UserPlus, UserXIcon } from "lucide-react";
 import z from "zod";
 import { NoteCard, TAPE_COLORS } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -152,10 +153,10 @@ function RouteComponent() {
 
   if (!isLoaded) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="flex items-center">
+      <div className="bg-background flex justify-center items-center h-screen">
+        <div className="flex gap-2 text-foreground">
           <Spinner />
-          <span className="ml-2">Loading...</span>
+          <span className="text-xl">Loading...</span>
         </div>
       </div>
     );
@@ -165,7 +166,7 @@ function RouteComponent() {
     <div className="min-h-screen bg-background p-8">
       <SignedOut>
         <div className="grid place-items-center h-screen">
-          <div className="max-w-lg w-full">
+          <div className="max-w-lg w-full flex flex-col gap-6">
             <Alert variant={"destructive"}>
               <UserXIcon />
               <AlertTitle className="font-semibold">
@@ -175,17 +176,25 @@ function RouteComponent() {
                 Please sign in to access this note.
               </AlertDescription>
             </Alert>
+            <div className="flex gap-4">
+              <SignInButton>
+                <Button variant={"default"} className="gap-2 md:flex-1">
+                  <LogIn />
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton>
+                <Button variant={"secondary"} className="gap-2 md:flex-1">
+                  <UserPlus />
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </div>
           </div>
-          <SignInButton>
-            <Button className="gap-2">
-              <LogIn />
-              Sign In
-            </Button>
-          </SignInButton>
         </div>
       </SignedOut>
       <SignedIn>
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto h-full">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold text-gray-800">My Notes</h1>
             <div className="flex gap-4">
@@ -207,11 +216,11 @@ function RouteComponent() {
             </div>
           </div>
           {isLoading ? (
-            <div className="text-center py-20">
-              <p className="text-gray-500 text-lg mb-4">
+            <div className="w-full h-full justify-center items-center">
+              <div className="flex gap-2 text-foreground">
                 <Spinner />
-                <span>Loading notes...</span>
-              </p>
+                <span className="text-xl">Loading notes...</span>
+              </div>
             </div>
           ) : error || notes === undefined ? (
             <Alert variant={"destructive"}>

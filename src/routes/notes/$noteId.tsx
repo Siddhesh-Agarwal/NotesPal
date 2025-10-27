@@ -4,6 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
 import {
+  AlertCircleIcon,
   ArrowLeftIcon,
   EyeIcon,
   EyeOffIcon,
@@ -11,7 +12,8 @@ import {
   TicketSlashIcon,
   UserXIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import z from "zod";
 import MarkdownPreview from "@/components/markdown-preview";
 import { TAPE_COLORS } from "@/components/note";
@@ -30,6 +32,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { db } from "@/db";
 import { notesTable, userTable } from "@/db/schema";
+import { queryClient } from "@/integrations/query";
 import {
   decryptNote,
   deriveMasterKey,
@@ -135,31 +138,99 @@ const updateNoteFn = createServerFn({ method: "POST" })
 function RouteComponent() {
   const { noteId } = Route.useParams();
   const { isLoaded, userId } = useAuth();
-  const { data, isLoading } = useQuery({
+
+  const {
+    data,
+    isLoading,
+    error: fetchError,
+  } = useQuery({
     queryKey: ["note", noteId],
     queryFn: () => getNoteFn({ data: { userId: userId || "", noteId } }),
-    enabled: !!noteId,
+    enabled: !!noteId && !!userId,
   });
-  const { mutate: updateNote } = useMutation({
+
+  const {
+    mutate: updateNote,
+    isPending,
+    error: saveError,
+  } = useMutation({
     mutationFn: (note: { content: string; tapeColor: string }) =>
       updateNoteFn({ data: { noteId, userId: userId || "", note } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["note", noteId] }).then(() => {
+        toast.success("Note updated");
+      });
+    },
   });
+
   const [note, setNote] = useState<Note | null>(null);
   const [isPreview, setIsPreview] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingUpdateRef = useRef<Pick<Note, "content" | "tapeColor"> | null>(
+    null,
+  );
 
+  // Initialize note from query data
   useEffect(() => {
     if (data) {
       setNote(data);
     }
   }, [data]);
 
+  // Debounced save with 1 second delay
   useEffect(() => {
-    if (!note) return;
-    updateNote({
+    if (!note?.content || !data) return;
+
+    // Check if note actually changed
+    if (note.content === data.content && note.tapeColor === data.tapeColor) {
+      return;
+    }
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Store pending update
+    pendingUpdateRef.current = {
       content: note.content,
       tapeColor: note.tapeColor,
-    });
-  }, [note, updateNote]);
+    };
+
+    // Set new timeout
+    saveTimeoutRef.current = setTimeout(() => {
+      if (pendingUpdateRef.current) {
+        updateNote(pendingUpdateRef.current);
+        pendingUpdateRef.current = null;
+      }
+    }, 1000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [note?.content, note?.tapeColor, data, updateNote]);
+
+  // Save on unmount if there's a pending update
+  useEffect(() => {
+    return () => {
+      if (pendingUpdateRef.current) {
+        updateNote(pendingUpdateRef.current);
+      }
+    };
+  }, [updateNote]);
+
+  const handleContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setNote((prev) => (prev ? { ...prev, content: e.target.value } : null));
+    },
+    [],
+  );
+
+  const handleColorChange = useCallback((color: string) => {
+    setNote((prev) => (prev ? { ...prev, tapeColor: color } : null));
+  }, []);
 
   if (!isLoaded || isLoading) {
     return (
@@ -190,7 +261,7 @@ function RouteComponent() {
     );
   }
 
-  if (!note) {
+  if (fetchError || !note) {
     return (
       <div className="grid place-items-center h-screen">
         <div>
@@ -198,7 +269,8 @@ function RouteComponent() {
             <TicketSlashIcon />
             <AlertTitle className="font-semibold">Note not found!</AlertTitle>
             <AlertDescription>
-              The note you are trying to access does not exist.
+              {fetchError?.message ||
+                "The note you are trying to access does not exist."}
             </AlertDescription>
           </Alert>
         </div>
@@ -209,13 +281,30 @@ function RouteComponent() {
   return (
     <div className="min-h-screen bg-linear-to-br from-chart-5 to-chart-4 p-8">
       <div className="max-w-4xl mx-auto">
+        {saveError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircleIcon className="h-4 w-4" />
+            <AlertTitle>Save Failed</AlertTitle>
+            <AlertDescription>
+              {saveError.message ||
+                "Failed to save your note. Your changes may be lost."}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="flex justify-between items-center mb-6">
           <Link to="/notes">
             <Button variant={"ghost"}>
               <ArrowLeftIcon size={20} />
             </Button>
           </Link>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {isPending && (
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <Spinner className="w-4 h-4" />
+                Saving...
+              </span>
+            )}
             <div className="relative">
               <ButtonGroup>
                 <Popover>
@@ -230,9 +319,7 @@ function RouteComponent() {
                       {TAPE_COLORS.map((color) => (
                         <Button
                           key={color.value}
-                          onClick={() =>
-                            setNote({ ...note, tapeColor: color.value })
-                          }
+                          onClick={() => handleColorChange(color.value)}
                           size={"icon-lg"}
                           style={{ backgroundColor: color.value }}
                           title={color.name}
@@ -285,7 +372,7 @@ function RouteComponent() {
           ) : (
             <Textarea
               value={note.content}
-              onChange={(e) => setNote({ ...note, content: e.target.value })}
+              onChange={handleContentChange}
               className="w-full h-full bg-transparent border-none outline-none resize-none text-foreground font-mono"
               style={{
                 lineHeight: "32px",
