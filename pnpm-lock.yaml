@@ -11,6 +11,12 @@ importers:
       '@clerk/tanstack-react-start':
         specifier: ^0.26.4
         version: 0.26.4(@tanstack/react-router@1.133.28(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@tanstack/react-start@1.133.31(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@polar-sh/sdk':
+        specifier: ^0.40.1
+        version: 0.40.1
+      '@polar-sh/tanstack-start':
+        specifier: ^0.1.12
+        version: 0.1.12(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6))
       '@radix-ui/react-avatar':
         specifier: ^1.1.10
         version: 1.1.10(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -1074,6 +1080,19 @@ packages:
   '@oozcitak/util@8.3.8':
     resolution: {integrity: sha512-T8TbSnGsxo6TDBJx/Sgv/BlVJL3tshxZP7Aq5R1mSnM5OcHY2dQaxLMu2+E8u3gN0MLOzdjurqN4ZRVuzQycOQ==}
     engines: {node: '>=8.0'}
+
+  '@polar-sh/adapter-utils@0.2.10':
+    resolution: {integrity: sha512-S/FPHfLdD4+GSOmvhwS1PVWvXDf5H2zkHVzuH8FDc/j9R/mSK8bc+y5N1vi9LOlI8yM2XfX93JJiRjm/7OrhIg==}
+
+  '@polar-sh/sdk@0.38.1':
+    resolution: {integrity: sha512-UdTaHqmRrY4aOCsfGaI+OM7NMNNXxaHFr4KomDgwuJ7JT4gZn4geCDvM8qf64GGLOXikiAtq+uOcpVPlGk0C9Q==}
+
+  '@polar-sh/sdk@0.40.1':
+    resolution: {integrity: sha512-P/hugjmo8G6vl6hdvXcZHjC2sOaj5ZRyo2BIdn5MKgiq6vXBcWRWfCEpIjcF2cZZ8H9ZVB+0kDYb9Dp5ZkhXuA==}
+
+  '@polar-sh/tanstack-start@0.1.12':
+    resolution: {integrity: sha512-CTU18e217SEm64ydLXTEq0uz2/CjONKUwbkrOO4ienAay5g9PsTwuAqIOKwnTaTi+nlg4vKzsBVXU4aCyEoAbw==}
+    engines: {node: '>=16'}
 
   '@poppinss/colors@4.1.5':
     resolution: {integrity: sha512-FvdDqtcRCtz6hThExcFOgW0cWX+xwSMWcRuQe5ZEb2m7cVQOAVZOIMt+/v9RxGiD9/OY16qJBXK4CVKWAPalBw==}
@@ -3679,6 +3698,35 @@ snapshots:
       '@oozcitak/util': 8.3.8
 
   '@oozcitak/util@8.3.8': {}
+
+  '@polar-sh/adapter-utils@0.2.10':
+    dependencies:
+      '@polar-sh/sdk': 0.38.1
+
+  '@polar-sh/sdk@0.38.1':
+    dependencies:
+      standardwebhooks: 1.0.0
+      zod: 3.25.76
+
+  '@polar-sh/sdk@0.40.1':
+    dependencies:
+      standardwebhooks: 1.0.0
+      zod: 3.25.76
+
+  '@polar-sh/tanstack-start@0.1.12(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6))':
+    dependencies:
+      '@polar-sh/adapter-utils': 0.2.10
+      '@polar-sh/sdk': 0.38.1
+      '@tanstack/react-start': 1.133.31(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@22.18.12)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6))
+    transitivePeerDependencies:
+      - '@rsbuild/core'
+      - crossws
+      - react
+      - react-dom
+      - supports-color
+      - vite
+      - vite-plugin-solid
+      - webpack
 
   '@poppinss/colors@4.1.5':
     dependencies:

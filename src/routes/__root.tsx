@@ -8,21 +8,12 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import appCss from "../styles.css?url";
+import { metadata } from "@/data/meta";
+import appCss from "@/styles.css?url";
 
 interface MyRouterContext {
   queryClient: QueryClient;
 }
-
-const metadata = {
-  title: "NotesPal",
-  description: "A cutesy no-nonsense note-taking app",
-  keywords: ["notes", "note-taking", "app", "notespal"],
-  author: "Siddhesh Agarwal",
-  site: import.meta.env.DEV
-    ? "http://localhost:5173"
-    : "https://notespal.siddhesh-agarwal.workers.dev",
-};
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => ({

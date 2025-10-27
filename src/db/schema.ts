@@ -2,7 +2,11 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const userTable = sqliteTable("users", {
   id: text("id", { length: 50 }).primaryKey(),
+  customerId: text("customer_id", { length: 50 }).notNull(),
+  email: text("email", { length: 256 }).notNull(),
+  name: text("name", { length: 256 }).notNull(),
   salt: text("salt", { length: 24 }).notNull(),
+  subscribedTill: integer("subscribed_till", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(new Date()),

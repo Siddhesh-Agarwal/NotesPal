@@ -37,7 +37,12 @@ const getNotesFn = createServerFn({ method: "GET" })
       .from(userTable)
       .where(eq(userTable.id, userId));
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("User not found. Please sign up or log in.");
+    }
+    if (!user.subscribedTill || user.subscribedTill < new Date()) {
+      throw new Error(
+        "User has not subscribed. Please subscribe to create/read your notes.",
+      );
     }
     const masterKey = await deriveMasterKey(
       user.id,
@@ -99,7 +104,7 @@ const createNoteFn = createServerFn({ method: "POST" })
         tapeColor,
       })
       .returning();
-    return note;
+    return note !== undefined;
   });
 
 const deleteNoteFn = createServerFn({ method: "POST" })
@@ -127,6 +132,7 @@ function RouteComponent() {
     data: notes,
     isLoading,
     refetch,
+    error,
   } = useQuery({
     queryKey: ["notes", user?.id],
     queryFn: () => getNotesFn({ data: { userId: user?.id || "" } }),
@@ -207,11 +213,12 @@ function RouteComponent() {
                 <span>Loading notes...</span>
               </p>
             </div>
-          ) : notes === undefined ? (
+          ) : error || notes === undefined ? (
             <Alert variant={"destructive"}>
               <AlertTitle className="text-2xl">Cannot load notes</AlertTitle>
               <AlertDescription className="text-base">
-                Something went wrong while loading your notes.
+                {error?.message ||
+                  "Something went wrong while loading your notes."}
               </AlertDescription>
             </Alert>
           ) : notes.length === 0 ? (

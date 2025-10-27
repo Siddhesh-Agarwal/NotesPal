@@ -57,6 +57,9 @@ const getNoteFn = createServerFn({ method: "GET" })
     if (!user) {
       throw new Error("User not found");
     }
+    if (!user.subscribedTill || user.subscribedTill < new Date()) {
+      throw new Error("User not subscribed");
+    }
     const [note] = await db
       .select()
       .from(notesTable)

@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NotesIndexRouteImport } from './routes/notes/index'
 import { Route as NotesNoteIdRouteImport } from './routes/notes/$noteId'
+import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
+import { Route as ApiWebhooksPolarRouteImport } from './routes/api/webhooks/polar'
 import { Route as ApiWebhooksClerkRouteImport } from './routes/api/webhooks/clerk'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +31,16 @@ const NotesNoteIdRoute = NotesNoteIdRouteImport.update({
   path: '/notes/$noteId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
+  id: '/api/checkout',
+  path: '/api/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksPolarRoute = ApiWebhooksPolarRouteImport.update({
+  id: '/api/webhooks/polar',
+  path: '/api/webhooks/polar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiWebhooksClerkRoute = ApiWebhooksClerkRouteImport.update({
   id: '/api/webhooks/clerk',
   path: '/api/webhooks/clerk',
@@ -37,36 +49,63 @@ const ApiWebhooksClerkRoute = ApiWebhooksClerkRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/checkout': typeof ApiCheckoutRoute
   '/notes/$noteId': typeof NotesNoteIdRoute
   '/notes': typeof NotesIndexRoute
   '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/checkout': typeof ApiCheckoutRoute
   '/notes/$noteId': typeof NotesNoteIdRoute
   '/notes': typeof NotesIndexRoute
   '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/checkout': typeof ApiCheckoutRoute
   '/notes/$noteId': typeof NotesNoteIdRoute
   '/notes/': typeof NotesIndexRoute
   '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/notes/$noteId' | '/notes' | '/api/webhooks/clerk'
+  fullPaths:
+    | '/'
+    | '/api/checkout'
+    | '/notes/$noteId'
+    | '/notes'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/polar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/notes/$noteId' | '/notes' | '/api/webhooks/clerk'
-  id: '__root__' | '/' | '/notes/$noteId' | '/notes/' | '/api/webhooks/clerk'
+  to:
+    | '/'
+    | '/api/checkout'
+    | '/notes/$noteId'
+    | '/notes'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/polar'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/checkout'
+    | '/notes/$noteId'
+    | '/notes/'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/polar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiCheckoutRoute: typeof ApiCheckoutRoute
   NotesNoteIdRoute: typeof NotesNoteIdRoute
   NotesIndexRoute: typeof NotesIndexRoute
   ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute
+  ApiWebhooksPolarRoute: typeof ApiWebhooksPolarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,6 +131,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotesNoteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/checkout': {
+      id: '/api/checkout'
+      path: '/api/checkout'
+      fullPath: '/api/checkout'
+      preLoaderRoute: typeof ApiCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/polar': {
+      id: '/api/webhooks/polar'
+      path: '/api/webhooks/polar'
+      fullPath: '/api/webhooks/polar'
+      preLoaderRoute: typeof ApiWebhooksPolarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/webhooks/clerk': {
       id: '/api/webhooks/clerk'
       path: '/api/webhooks/clerk'
@@ -104,9 +157,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiCheckoutRoute: ApiCheckoutRoute,
   NotesNoteIdRoute: NotesNoteIdRoute,
   NotesIndexRoute: NotesIndexRoute,
   ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
+  ApiWebhooksPolarRoute: ApiWebhooksPolarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
