@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "notespal",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "compatibility_date": "2025-10-10",
+  "d1_databases": [
+    {
+      "binding": "D1",
+      "database_name": "notepal",
+      "database_id": "eecda733-7631-4939-a823-1df46ed2742f",
+      "migrations_dir": "drizzle/migrations",
+      "remote": true,
+    },
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+}
