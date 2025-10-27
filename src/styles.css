@@ -5,14 +5,14 @@
 @font-face {
     font-family: "Architects Daughter";
     src: url("/src/assets/ArchitectsDaughter-Regular.ttf") format("truetype");
-    font-weight: normal;
+    font-weight: 100 900;
     font-style: normal;
 }
 
 @font-face {
     font-family: "Inter";
     src: url("/src/assets/Inter-VariableFont.ttf") format("truetype");
-    font-weight: normal;
+    font-weight: 100 900;
     font-style: normal;
 }
 
