@@ -2,7 +2,8 @@ import {
   SignedIn,
   SignedOut,
   SignInButton,
-  useAuth,
+  UserButton,
+  useUser,
 } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -12,6 +13,7 @@ import { LogIn, PlusIcon, UserXIcon } from "lucide-react";
 import z from "zod";
 import { NoteCard, TAPE_COLORS } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { db } from "@/db";
@@ -112,25 +114,25 @@ const deleteNoteFn = createServerOnlyFn(async ({ userId, noteId }) => {
 });
 
 function RouteComponent() {
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, user } = useUser();
   const {
     data: notes,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["notes", userId],
-    queryFn: () => getNotesFn({ data: { userId: userId || "" } }),
-    enabled: !!userId,
+    queryKey: ["notes", user?.id],
+    queryFn: () => getNotesFn({ data: { userId: user?.id || "" } }),
+    enabled: !!user?.id,
   });
   const { mutateAsync: deleteNoteAsync } = useMutation({
-    mutationKey: ["deleteNote", userId],
+    mutationKey: ["deleteNote", user?.id],
     mutationFn: ({ id }: { id: string }) =>
-      deleteNoteFn({ userId: userId || "", noteId: id }),
+      deleteNoteFn({ userId: user?.id || "", noteId: id }),
     onSuccess: () => refetch(),
   });
   const { mutateAsync: createNoteAsync } = useMutation({
-    mutationKey: ["createNote", userId],
-    mutationFn: () => createNoteFn({ data: { userId: userId || "" } }),
+    mutationKey: ["createNote", user?.id],
+    mutationFn: () => createNoteFn({ data: { userId: user?.id || "" } }),
     onSuccess: () => refetch(),
   });
 
@@ -172,13 +174,23 @@ function RouteComponent() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold text-gray-800">My Notes</h1>
-            <Button
-              onClick={async () => await createNoteAsync()}
-              className="bg-blue-600 hover:bg-blue-400 text-white"
-            >
-              <PlusIcon size={20} />
-              New Note
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={async () => await createNoteAsync()}
+                className="bg-blue-600 hover:bg-blue-400 text-white"
+              >
+                <PlusIcon size={20} />
+                New Note
+              </Button>
+              <UserButton>
+                <Avatar>
+                  <AvatarImage src={user?.imageUrl ?? ""} />
+                  <AvatarFallback>
+                    {user?.fullName?.charAt(0) ?? ""}
+                  </AvatarFallback>
+                </Avatar>
+              </UserButton>
+            </div>
           </div>
           {isLoading ? (
             <div className="text-center py-20">
