@@ -19,7 +19,9 @@ const metadata = {
   description: "A cutesy no-nonsense note-taking app",
   keywords: ["notes", "note-taking", "app", "notespal"],
   author: "Siddhesh Agarwal",
-  site: "https://notespal.siddhesh-agarwal.workers.dev",
+  site: import.meta.env.DEV
+    ? "http://localhost:5173"
+    : "https://notespal.siddhesh-agarwal.workers.dev",
 };
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
@@ -61,7 +63,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
       {
         property: "og:image",
-        content: `${metadata.site}/logo192.png`,
+        content: `${metadata.site}/og.png`,
       },
       {
         name: "twitter:title",
@@ -73,11 +75,15 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
       {
         name: "twitter:image",
-        content: `${metadata.site}/logo192.png`,
+        content: `${metadata.site}/og.png`,
       },
       {
         name: "twitter:card",
         content: "summary_large_image",
+      },
+      {
+        name: "twitter:url",
+        content: metadata.site,
       },
     ],
     links: [
@@ -102,21 +108,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
         >
           {children}
-          <TanStackDevtools
-            config={{
-              position: "bottom-right",
-            }}
-            plugins={[
-              {
-                name: "Tanstack Router",
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              {
-                name: "Tanstack Query",
-                render: <ReactQueryDevtoolsPanel />,
-              },
-            ]}
-          />
+          {import.meta.env.DEV && (
+            <TanStackDevtools
+              config={{
+                position: "bottom-right",
+              }}
+              plugins={[
+                {
+                  name: "Tanstack Router",
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+                {
+                  name: "Tanstack Query",
+                  render: <ReactQueryDevtoolsPanel />,
+                },
+              ]}
+            />
+          )}
         </ClerkProvider>
         <Scripts />
       </body>
