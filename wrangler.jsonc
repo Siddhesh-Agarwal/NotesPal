@@ -17,4 +17,5 @@
     "enabled": true,
     "head_sampling_rate": 1,
   },
+  "pages_build_output_dir": "/dist",
 }

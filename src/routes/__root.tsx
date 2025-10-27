@@ -14,6 +14,14 @@ interface MyRouterContext {
   queryClient: QueryClient;
 }
 
+const metadata = {
+  title: "NotesPal",
+  description: "A cutesy no-nonsense note-taking app",
+  keywords: ["notes", "note-taking", "app", "notespal"],
+  author: "Siddhesh Agarwal",
+  site: "https://notespal.siddhesh-agarwal.workers.dev",
+};
+
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => ({
     meta: [
@@ -25,7 +33,51 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "TanStack Start Starter",
+        title: metadata.title,
+      },
+      {
+        name: "description",
+        content: metadata.description,
+      },
+      {
+        name: "keywords",
+        content: metadata.keywords.join(", "),
+      },
+      {
+        name: "author",
+        content: metadata.author,
+      },
+      {
+        property: "og:title",
+        content: metadata.title,
+      },
+      {
+        property: "og:description",
+        content: metadata.description,
+      },
+      {
+        property: "og:url",
+        content: metadata.site,
+      },
+      {
+        property: "og:image",
+        content: `${metadata.site}/logo192.png`,
+      },
+      {
+        name: "twitter:title",
+        content: metadata.title,
+      },
+      {
+        name: "twitter:description",
+        content: metadata.description,
+      },
+      {
+        name: "twitter:image",
+        content: `${metadata.site}/logo192.png`,
+      },
+      {
+        name: "twitter:card",
+        content: "summary_large_image",
       },
     ],
     links: [
