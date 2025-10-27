@@ -7,7 +7,7 @@ import {
 } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { createServerFn, createServerOnlyFn } from "@tanstack/react-start";
+import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
 import { LogIn, PlusIcon, UserXIcon } from "lucide-react";
 import z from "zod";
@@ -102,16 +102,24 @@ const createNoteFn = createServerFn({ method: "POST" })
     return note;
   });
 
-const deleteNoteFn = createServerOnlyFn(async ({ userId, noteId }) => {
-  const [deletedNote] = await db
-    .delete(notesTable)
-    .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)))
-    .returning();
-  if (!deletedNote) {
-    throw new Error("Note not found");
-  }
-  return deletedNote;
-});
+const deleteNoteFn = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      userId: z.string(),
+      noteId: z.string(),
+    }),
+  )
+  .handler(async (request) => {
+    const { userId, noteId } = request.data;
+    const [deletedNote] = await db
+      .delete(notesTable)
+      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)))
+      .returning();
+    if (!deletedNote) {
+      throw new Error("Note not found");
+    }
+    return deletedNote;
+  });
 
 function RouteComponent() {
   const { isLoaded, user } = useUser();
@@ -127,7 +135,7 @@ function RouteComponent() {
   const { mutateAsync: deleteNoteAsync } = useMutation({
     mutationKey: ["deleteNote", user?.id],
     mutationFn: ({ id }: { id: string }) =>
-      deleteNoteFn({ userId: user?.id || "", noteId: id }),
+      deleteNoteFn({ data: { userId: user?.id || "", noteId: id } }),
     onSuccess: () => refetch(),
   });
   const { mutateAsync: createNoteAsync } = useMutation({
@@ -201,15 +209,15 @@ function RouteComponent() {
             </div>
           ) : notes === undefined ? (
             <Alert variant={"destructive"}>
-              <AlertTitle>Cannot load notes</AlertTitle>
-              <AlertDescription>
+              <AlertTitle className="text-2xl">Cannot load notes</AlertTitle>
+              <AlertDescription className="text-base">
                 Something went wrong while loading your notes.
               </AlertDescription>
             </Alert>
           ) : notes.length === 0 ? (
             <Alert variant={"destructive"}>
-              <AlertTitle>No notes yet</AlertTitle>
-              <AlertDescription>
+              <AlertTitle className="text-2xl">No notes yet</AlertTitle>
+              <AlertDescription className="text-base">
                 Create your first note to get started.
               </AlertDescription>
             </Alert>
