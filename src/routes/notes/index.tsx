@@ -1,6 +1,5 @@
 import {
   SignInButton,
-  SignOutButton,
   SignUpButton,
   useClerk,
   useUser,
@@ -143,7 +142,7 @@ const deleteNoteFn = createServerFn({ method: "POST" })
 
 function RouteComponent() {
   const { isLoaded, user } = useUser();
-  const { redirectToUserProfile } = useClerk();
+  const { redirectToUserProfile, signOut } = useClerk();
   const {
     data: notes,
     isLoading,
@@ -241,12 +240,10 @@ function RouteComponent() {
                   <UserIcon />
                   Profile
                 </DropdownMenuItem>
-                <SignOutButton>
-                  <DropdownMenuItem className="gap-2">
-                    <LogOutIcon />
-                    Logout
-                  </DropdownMenuItem>
-                </SignOutButton>
+                <DropdownMenuItem className="gap-2" onClick={() => signOut()}>
+                  <LogOutIcon />
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
