@@ -1,8 +1,8 @@
-import { Polar } from "@polar-sh/sdk";
 import { createFileRoute } from "@tanstack/react-router";
 import { Webhook } from "svix";
 import { db } from "@/db";
 import { userTable } from "@/db/schema";
+import { polar } from "@/integrations/polar";
 import { generateSalt } from "@/lib/encrypt";
 
 const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -26,7 +26,6 @@ export const Route = createFileRoute("/api/webhooks/clerk")({
 
         if (evt.type === "user.created") {
           const { id, email, name } = evt.data;
-          const polar = new Polar();
           const { id: customerId } = await polar.customers.create({
             externalId: id,
             email,
