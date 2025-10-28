@@ -1,5 +1,6 @@
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/tanstack-react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Image } from "@unpic/react";
 import {
   ArrowBigDown,
   ArrowBigLeft,
@@ -43,8 +44,14 @@ function App() {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="relative w-80 h-80 bg-white border-4 border-dashed border-[#2d2a26] rounded-2xl shadow-lg flex items-center justify-center"
+        className="relative w-80 h-80 bg-white border-4 border-dashed border-black rounded-2xl shadow-lg flex items-center justify-center"
       >
+        <Image
+          src="https://illustrations.popsy.co/white/studying.svg"
+          alt="Studying Illustration"
+          width={200}
+          height={200}
+        />
         <div className="absolute top-3 left-3 rotate-[-5deg]">
           <StickyNote className="w-10 h-10 text-chart-1" />
         </div>
