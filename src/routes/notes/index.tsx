@@ -1,21 +1,35 @@
 import {
-  SignedIn,
-  SignedOut,
   SignInButton,
+  SignOutButton,
   SignUpButton,
-  UserButton,
+  useClerk,
   useUser,
 } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
-import { LogIn, PlusIcon, UserPlus, UserXIcon } from "lucide-react";
+import {
+  LogIn,
+  LogOutIcon,
+  PlusIcon,
+  UserIcon,
+  UserPlus,
+  UserXIcon,
+} from "lucide-react";
 import z from "zod";
 import { NoteCard, TAPE_COLORS } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { db } from "@/db";
 import { notesTable, userTable } from "@/db/schema";
@@ -129,6 +143,7 @@ const deleteNoteFn = createServerFn({ method: "POST" })
 
 function RouteComponent() {
   const { isLoaded, user } = useUser();
+  const { redirectToUserProfile } = useClerk();
   const {
     data: notes,
     isLoading,
@@ -207,14 +222,33 @@ function RouteComponent() {
               <PlusIcon size={20} />
               New Note
             </Button>
-            <UserButton>
-              <Avatar>
-                <AvatarImage src={user?.imageUrl ?? ""} />
-                <AvatarFallback>
-                  {user?.fullName?.charAt(0) ?? ""}
-                </AvatarFallback>
-              </Avatar>
-            </UserButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Avatar>
+                  <AvatarImage src={user?.imageUrl ?? ""} />
+                  <AvatarFallback>
+                    {user?.fullName?.charAt(0) ?? ""}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="gap-2"
+                  onClick={() => redirectToUserProfile()}
+                >
+                  <UserIcon />
+                  Profile
+                </DropdownMenuItem>
+                <SignOutButton>
+                  <DropdownMenuItem className="gap-2">
+                    <LogOutIcon />
+                    Logout
+                  </DropdownMenuItem>
+                </SignOutButton>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         {isLoading ? (
