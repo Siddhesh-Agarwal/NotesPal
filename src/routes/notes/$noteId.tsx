@@ -1,4 +1,8 @@
-import { useAuth } from "@clerk/tanstack-react-start";
+import {
+  SignInButton,
+  SignUpButton,
+  useAuth,
+} from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -8,8 +12,10 @@ import {
   ArrowLeftIcon,
   EyeIcon,
   EyeOffIcon,
+  LogIn,
   PaletteIcon,
   TicketSlashIcon,
+  UserPlus,
   UserXIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -234,10 +240,10 @@ function RouteComponent() {
 
   if (!isLoaded || isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="flex items-center">
+      <div className="bg-background flex justify-center items-center h-screen">
+        <div className="flex gap-2 text-foreground">
           <Spinner />
-          <span className="ml-2">Loading...</span>
+          <span className="text-xl">Loading...</span>
         </div>
       </div>
     );
@@ -246,7 +252,7 @@ function RouteComponent() {
   if (!userId) {
     return (
       <div className="grid place-items-center h-screen">
-        <div className="max-w-lg w-full">
+        <div className="max-w-lg w-full flex flex-col gap-4">
           <Alert variant={"destructive"}>
             <UserXIcon />
             <AlertTitle className="font-semibold">
@@ -256,6 +262,20 @@ function RouteComponent() {
               Please sign in to access this note.
             </AlertDescription>
           </Alert>
+          <div className="flex gap-2">
+            <SignInButton>
+              <Button variant={"default"} className="gap-2 flex-1 rounded-sm">
+                <LogIn />
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button variant={"secondary"} className="gap-2 flex-1 rounded-sm">
+                <UserPlus />
+                Sign Up
+              </Button>
+            </SignUpButton>
+          </div>
         </div>
       </div>
     );
@@ -264,7 +284,7 @@ function RouteComponent() {
   if (fetchError || !note) {
     return (
       <div className="grid place-items-center h-screen">
-        <div>
+        <div className="max-w-lg w-full">
           <Alert variant={"destructive"}>
             <TicketSlashIcon />
             <AlertTitle className="font-semibold">Note not found!</AlertTitle>
