@@ -1,4 +1,4 @@
-import { SignUpButton, useAuth } from "@clerk/tanstack-react-start";
+import { SignedIn, SignedOut, SignUpButton } from "@clerk/tanstack-react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowBigDown,
@@ -22,8 +22,6 @@ export const Route = createFileRoute("/")({
 });
 
 function App() {
-  const { userId } = useAuth();
-
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="text-center mb-8 font-serif">
@@ -59,28 +57,24 @@ function App() {
       </motion.div>
 
       {/* Buttons */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-10 flex gap-4"
-      >
-        {userId ? (
+      <div className="mt-10">
+        <SignedOut>
           <SignUpButton forceRedirectUrl={"/notes"}>
-            <Button className="bg-[#2d2a26] text-[#fff8e7] hover:bg-[#4a433c] px-6 py-2 rounded-xl">
-              <Pencil className="mr-2" />
+            <Button variant={"secondary"} className="gap-2" size={"lg"}>
+              <Pencil />
               Start Writing
             </Button>
           </SignUpButton>
-        ) : (
+        </SignedOut>
+        <SignedIn>
           <Link to="/notes">
-            <Button className="rounded-xl">
-              <StickyNote className="mr-2" />
+            <Button variant={"default"} className="gap-2" size={"lg"}>
+              <StickyNote />
               View Notes
             </Button>
           </Link>
-        )}
-      </motion.div>
+        </SignedIn>
+      </div>
 
       {/* Random Doodle Arrows */}
       <ArrowBigRight className="absolute top-10 right-20 text-chart-3 rotate-20 opacity-70 w-10 h-10" />

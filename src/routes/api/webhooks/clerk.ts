@@ -17,17 +17,12 @@ export const Route = createFileRoute("/api/webhooks/clerk")({
         const svix = new Webhook(CLERK_WEBHOOK_SECRET);
         const payload = await request.text();
         const headers = {
-          "svix-id": request.headers.get("svix-id"),
-          "svix-timestamp": request.headers.get("svix-timestamp"),
-          "svix-signature": request.headers.get("svix-signature"),
+          "svix-id": request.headers.get("svix-id") || "",
+          "svix-timestamp": request.headers.get("svix-timestamp") || "",
+          "svix-signature": request.headers.get("svix-signature") || "",
         };
 
-        let evt;
-        try {
-          evt = svix.verify(payload, headers);
-        } catch {
-          return new Response("Invalid signature", { status: 400 });
-        }
+        const evt = svix.verify(payload, headers);
 
         if (evt.type === "user.created") {
           const { id, email, name } = evt.data;

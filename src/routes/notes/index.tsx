@@ -162,98 +162,97 @@ function RouteComponent() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="grid place-items-center h-screen">
+        <div className="max-w-lg w-full flex flex-col gap-4">
+          <Alert variant={"destructive"}>
+            <UserXIcon />
+            <AlertTitle className="font-semibold">
+              You are not logged in!
+            </AlertTitle>
+            <AlertDescription>
+              Please sign in to access this note.
+            </AlertDescription>
+          </Alert>
+          <div className="flex gap-2">
+            <SignInButton>
+              <Button variant={"default"} className="gap-2 flex-1 rounded-sm">
+                <LogIn />
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button variant={"secondary"} className="gap-2 flex-1 rounded-sm">
+                <UserPlus />
+                Sign Up
+              </Button>
+            </SignUpButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-8">
-      <SignedOut>
-        <div className="grid place-items-center h-screen">
-          <div className="max-w-lg w-full flex flex-col gap-6">
-            <Alert variant={"destructive"}>
-              <UserXIcon />
-              <AlertTitle className="font-semibold">
-                You are not logged in!
-              </AlertTitle>
-              <AlertDescription>
-                Please sign in to access this note.
-              </AlertDescription>
-            </Alert>
-            <div className="flex gap-4">
-              <SignInButton>
-                <Button variant={"default"} className="gap-2 md:flex-1">
-                  <LogIn />
-                  Sign In
-                </Button>
-              </SignInButton>
-              <SignUpButton>
-                <Button variant={"secondary"} className="gap-2 md:flex-1">
-                  <UserPlus />
-                  Sign Up
-                </Button>
-              </SignUpButton>
-            </div>
+      <div className="max-w-7xl mx-auto h-full">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800">My Notes</h1>
+          <div className="flex gap-4">
+            <Button
+              onClick={async () => await createNoteAsync()}
+              className="bg-blue-600 hover:bg-blue-400 text-white"
+            >
+              <PlusIcon size={20} />
+              New Note
+            </Button>
+            <UserButton>
+              <Avatar>
+                <AvatarImage src={user?.imageUrl ?? ""} />
+                <AvatarFallback>
+                  {user?.fullName?.charAt(0) ?? ""}
+                </AvatarFallback>
+              </Avatar>
+            </UserButton>
           </div>
         </div>
-      </SignedOut>
-      <SignedIn>
-        <div className="max-w-7xl mx-auto h-full">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800">My Notes</h1>
-            <div className="flex gap-4">
-              <Button
-                onClick={async () => await createNoteAsync()}
-                className="bg-blue-600 hover:bg-blue-400 text-white"
-              >
-                <PlusIcon size={20} />
-                New Note
-              </Button>
-              <UserButton>
-                <Avatar>
-                  <AvatarImage src={user?.imageUrl ?? ""} />
-                  <AvatarFallback>
-                    {user?.fullName?.charAt(0) ?? ""}
-                  </AvatarFallback>
-                </Avatar>
-              </UserButton>
+        {isLoading ? (
+          <div className="w-full h-full justify-center items-center">
+            <div className="flex gap-2 text-foreground">
+              <Spinner />
+              <span className="text-xl">Loading notes...</span>
             </div>
           </div>
-          {isLoading ? (
-            <div className="w-full h-full justify-center items-center">
-              <div className="flex gap-2 text-foreground">
-                <Spinner />
-                <span className="text-xl">Loading notes...</span>
-              </div>
-            </div>
-          ) : error || notes === undefined ? (
-            <Alert variant={"destructive"}>
-              <AlertTitle className="text-2xl">Cannot load notes</AlertTitle>
-              <AlertDescription className="text-base">
-                {error?.message ||
-                  "Something went wrong while loading your notes."}
-              </AlertDescription>
-            </Alert>
-          ) : notes.length === 0 ? (
-            <Alert variant={"destructive"}>
-              <AlertTitle className="text-2xl">No notes yet</AlertTitle>
-              <AlertDescription className="text-base">
-                Create your first note to get started.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-              {notes.map((note) => (
-                <Link to={`/notes/${note.id}`} key={note.id}>
-                  <NoteCard
-                    key={note.id}
-                    note={note}
-                    onDelete={async () =>
-                      await deleteNoteAsync({ id: note.id })
-                    }
-                  />
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </SignedIn>
+        ) : error || notes === undefined ? (
+          <Alert variant={"destructive"}>
+            <AlertTitle className="text-2xl">Cannot load notes</AlertTitle>
+            <AlertDescription className="text-base">
+              {error?.message ||
+                "Something went wrong while loading your notes."}
+            </AlertDescription>
+          </Alert>
+        ) : notes.length === 0 ? (
+          <Alert variant={"destructive"}>
+            <AlertTitle className="text-2xl">No notes yet</AlertTitle>
+            <AlertDescription className="text-base">
+              Create your first note to get started.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+            {notes.map((note) => (
+              <Link to={`/notes/${note.id}`} key={note.id}>
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  onDelete={async () => await deleteNoteAsync({ id: note.id })}
+                />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

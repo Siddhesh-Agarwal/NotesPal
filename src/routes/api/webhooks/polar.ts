@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/webhooks/polar")({
             .set({
               subscribedTill: payload.data.endsAt,
             })
-            .where(eq(userTable.id, payload.data.customerId));
+            .where(eq(userTable.customerId, payload.data.customerId));
         },
       }),
     },
