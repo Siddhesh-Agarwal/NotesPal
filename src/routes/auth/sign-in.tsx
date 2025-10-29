@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
-import { LogInIcon } from "lucide-react";
+import { LogInIcon, MoveLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -87,68 +87,77 @@ function RouteComponent() {
 
   return (
     <div className="bg-background h-screen grid place-items-center">
-      <Card className="max-w-xl w-full">
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign In</CardTitle>
-          <CardDescription className="text-lg">
-            Enter your email and password to sign in.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="janedoe@example.com"
-                        className="border-border"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="password"
-                        className="border-border"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <div className="flex flex-col w-full space-y-2">
-                <Button type="submit" disabled={!isLoaded}>
-                  <LogInIcon />
-                  Sign In
-                </Button>
-                <p className="text-muted-foreground text-center">
-                  Don't have an account?{" "}
-                  <Link
-                    to="/auth/sign-up"
-                    className="font-semibold hover:underline"
-                  >
-                    Sign Up
-                  </Link>
-                </p>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      <div className="max-w-xl w-full">
+        <Link to="/" className="flex gap-2 mb-2 hover:underline">
+          <MoveLeft />
+          Back
+        </Link>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-2xl">Sign In</CardTitle>
+            <CardDescription className="text-lg">
+              Enter your email and password to sign in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="janedoe@example.com"
+                          className="border-border"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          className="border-border"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <div className="flex flex-col w-full space-y-2">
+                  <Button type="submit" disabled={!isLoaded}>
+                    <LogInIcon />
+                    Sign In
+                  </Button>
+                  <p className="text-muted-foreground text-center">
+                    Don't have an account?{" "}
+                    <Link
+                      to="/auth/sign-up"
+                      className="font-semibold hover:underline"
+                    >
+                      Sign Up
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useSignUp } from "@clerk/clerk-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { LogInIcon } from "lucide-react";
+import { LogInIcon, MoveLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -112,27 +112,69 @@ function RouteComponent() {
 
   return (
     <div className="bg-background h-screen grid place-items-center">
-      <Card className="max-w-xl w-full">
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
-          <CardDescription className="text-lg">
-            Register for your notespal account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="flex space-x-4">
+      <div className="max-w-xl w-full">
+        <Link to="/" className="flex gap-2 mb-2 hover:underline">
+          <MoveLeft />
+          Back
+        </Link>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-2xl">Sign Up</CardTitle>
+            <CardDescription className="text-lg">
+              Register for your notespal account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <div className="flex space-x-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Jane"
+                            className="border-border"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Doe"
+                            className="border-border"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
-                  name="firstName"
+                  name="email"
                   render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>First Name</FormLabel>
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Jane"
+                          type="email"
+                          placeholder="janedoe@example.com"
                           className="border-border"
                         />
                       </FormControl>
@@ -141,105 +183,72 @@ function RouteComponent() {
                 />
                 <FormField
                   control={form.control}
-                  name="lastName"
+                  name="password"
                   render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Last Name</FormLabel>
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Doe"
+                          type="password"
                           className="border-border"
                         />
                       </FormControl>
                     </FormItem>
                   )}
                 />
-              </div>
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="janedoe@example.com"
-                        className="border-border"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="password"
-                        className="border-border"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="password"
-                        className="border-border"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="termsAccepted"
-                render={({ field }) => (
-                  <FormItem className="flex">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className="border-border"
-                      />
-                    </FormControl>
-                    <FormLabel>Terms Accepted</FormLabel>
-                  </FormItem>
-                )}
-              />
-              <div className="flex flex-col w-full space-y-2">
-                <Button type="submit" disabled={!isLoaded} className="w-full">
-                  <LogInIcon />
-                  Sign Up
-                </Button>
-                <p className="text-muted-foreground text-center">
-                  Already have an account?{" "}
-                  <Link
-                    to="/auth/sign-in"
-                    className="font-semibold hover:underline"
-                  >
-                    Sign In
-                  </Link>
-                </p>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          className="border-border"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="termsAccepted"
+                  render={({ field }) => (
+                    <FormItem className="flex">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border-border"
+                        />
+                      </FormControl>
+                      <FormLabel>Terms Accepted</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <div className="flex flex-col w-full space-y-2">
+                  <Button type="submit" disabled={!isLoaded} className="w-full">
+                    <LogInIcon />
+                    Sign Up
+                  </Button>
+                  <p className="text-muted-foreground text-center">
+                    Already have an account?{" "}
+                    <Link
+                      to="/auth/sign-in"
+                      className="font-semibold hover:underline"
+                    >
+                      Sign In
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
