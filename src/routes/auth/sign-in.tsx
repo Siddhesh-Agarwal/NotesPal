@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
+import { LogInIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -85,8 +86,8 @@ function RouteComponent() {
   }
 
   return (
-    <div className="bg-background grid place-items-center">
-      <Card>
+    <div className="bg-background h-screen grid place-items-center">
+      <Card className="max-w-xl w-full">
         <CardHeader>
           <CardTitle>Sign In</CardTitle>
           <CardDescription>
@@ -107,6 +108,7 @@ function RouteComponent() {
                         {...field}
                         type="email"
                         placeholder="janedoe@example.com"
+                        className="border-border"
                       />
                     </FormControl>
                   </FormItem>
@@ -119,17 +121,28 @@ function RouteComponent() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input
+                        {...field}
+                        type="password"
+                        className="border-border"
+                      />
                     </FormControl>
                   </FormItem>
                 )}
               />
               <div className="flex flex-col w-full">
                 <Button type="submit" disabled={!isLoaded}>
+                  <LogInIcon />
                   Sign In
                 </Button>
-                <p className="mt-4 text-muted-foreground">
-                  Don't have an account? <Link to="/auth/sign-up">Sign Up</Link>
+                <p className="mt-2 text-muted-foreground text-center">
+                  Don't have an account?{" "}
+                  <Link
+                    to="/auth/sign-up"
+                    className="font-semibold hover:underline"
+                  >
+                    Sign Up
+                  </Link>
                 </p>
               </div>
             </form>

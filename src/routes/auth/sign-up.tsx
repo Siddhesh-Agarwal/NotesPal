@@ -2,6 +2,7 @@ import { useSignUp } from "@clerk/clerk-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { LogInIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -110,39 +111,51 @@ function RouteComponent() {
   }
 
   return (
-    <div className="bg-background grid place-items-center">
-      <Card>
+    <div className="bg-background h-screen grid place-items-center">
+      <Card className="max-w-xl w-full">
         <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Create an account</CardDescription>
+          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardDescription className="text-lg">
+            Register for your notespal account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Jane" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Doe" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <div className="flex space-x-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Jane"
+                          className="border-border"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Doe"
+                          className="border-border"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="email"
@@ -154,6 +167,7 @@ function RouteComponent() {
                         {...field}
                         type="email"
                         placeholder="janedoe@example.com"
+                        className="border-border"
                       />
                     </FormControl>
                   </FormItem>
@@ -166,7 +180,11 @@ function RouteComponent() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input
+                        {...field}
+                        type="password"
+                        className="border-border"
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -178,7 +196,11 @@ function RouteComponent() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input
+                        {...field}
+                        type="password"
+                        className="border-border"
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -187,24 +209,31 @@ function RouteComponent() {
                 control={form.control}
                 name="termsAccepted"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        className="border-border"
                       />
                     </FormControl>
                     <FormLabel>Terms Accepted</FormLabel>
                   </FormItem>
                 )}
               />
-              <div>
-                <Button type="submit" disabled={isLoaded}>
+              <div className="flex flex-col w-full">
+                <Button type="submit" disabled={!isLoaded} className="w-full">
+                  <LogInIcon />
                   Sign Up
                 </Button>
-                <p className="mt-4 text-muted-foreground">
+                <p className="mt-2 text-muted-foreground text-center">
                   Already have an account?{" "}
-                  <Link to="/auth/sign-in">Sign In</Link>
+                  <Link
+                    to="/auth/sign-in"
+                    className="font-semibold hover:underline"
+                  >
+                    Sign In
+                  </Link>
                 </p>
               </div>
             </form>
