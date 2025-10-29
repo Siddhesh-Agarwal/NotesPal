@@ -58,7 +58,7 @@ function App() {
         <div className="absolute bottom-4 right-4 rotate-10">
           <Pencil className="w-10 h-10 text-chart-2" />
         </div>
-        <p className="text-2xl text-[#2d2a26] font-semibold font-serif">
+        <p className="text-2xl font-semibold font-serif">
           Your ideas belong here
         </p>
       </motion.div>
@@ -88,11 +88,11 @@ function App() {
       <ArrowBigLeft className="absolute bottom-16 left-24 text-chart-4 rotate-[-15deg] opacity-70 w-10 h-10" />
       <ArrowBigUp className="absolute top-24 left-12 text-chart-5 rotate-10 opacity-60 w-9 h-9" />
       <ArrowBigDown className="absolute bottom-10 right-10 text-chart-1 rotate-[5deg] opacity-60 w-9 h-9" />
-      <Heart className="absolute top-16 left-1/2 text-chart-2 rotate-15 opacity-60 w-8 h-8" />
-      <Star className="absolute top-1/3 right-12 text-chart-3 -rotate-12 opacity-70 w-9 h-9" />
+      <Heart className="absolute top-16 left-1/2 text-chart-2 rotate-15 opacity-60 w-8 h-8 fill-chart-2" />
+      <Star className="absolute top-1/3 right-12 text-chart-3 -rotate-12 opacity-70 w-9 h-9 fill-chart-3" />
       <Sun className="absolute top-6 left-12 text-chart-4 opacity-60 w-10 h-10" />
-      <Cloud className="absolute bottom-20 right-1/3 text-chart-5 opacity-50 w-10 h-10" />
-      <Zap className="absolute bottom-28 left-10 text-chart-1 rotate-25 opacity-60 w-9 h-9" />
+      <Cloud className="absolute bottom-20 right-1/3 text-chart-5 opacity-50 w-10 h-10 fill-chart-5" />
+      <Zap className="absolute bottom-28 left-10 text-chart-1 rotate-25 opacity-60 w-9 h-9 fill-chart-1" />
       <Smile className="absolute top-1/2 right-8 text-chart-2 rotate-[8deg] opacity-70 w-8 h-8" />
 
       {/* Footer Doodles */}
