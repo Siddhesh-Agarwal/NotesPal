@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, SignUpButton } from "@clerk/tanstack-react-start";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import {
@@ -66,12 +66,12 @@ function App() {
       {/* Buttons */}
       <div className="mt-10">
         <SignedOut>
-          <SignUpButton forceRedirectUrl={"/notes"}>
+          <Link to="/auth/sign-up">
             <Button variant={"secondary"} className="gap-2" size={"lg"}>
               <Pencil />
               Start Writing
             </Button>
-          </SignUpButton>
+          </Link>
         </SignedOut>
         <SignedIn>
           <Link to="/notes">

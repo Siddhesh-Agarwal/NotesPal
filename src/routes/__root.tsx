@@ -1,4 +1,4 @@
-import { ClerkProvider } from "@clerk/tanstack-react-start";
+import { ClerkProvider } from "@clerk/clerk-react";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";

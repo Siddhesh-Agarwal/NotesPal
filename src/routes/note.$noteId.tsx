@@ -1,8 +1,4 @@
-import {
-  SignInButton,
-  SignUpButton,
-  useAuth,
-} from "@clerk/tanstack-react-start";
+import { SignInButton, SignUpButton, useAuth } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -46,7 +42,7 @@ import {
 } from "@/lib/encrypt";
 import type { Note } from "@/types/note";
 
-export const Route = createFileRoute("/notes/$noteId")({
+export const Route = createFileRoute("/note/$noteId")({
   component: RouteComponent,
 });
 

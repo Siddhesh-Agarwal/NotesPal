@@ -1,9 +1,4 @@
-import {
-  SignInButton,
-  SignUpButton,
-  useClerk,
-  useUser,
-} from "@clerk/tanstack-react-start";
+import { useClerk, useUser } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -38,7 +33,7 @@ import {
   deriveMasterKey,
 } from "@/lib/encrypt";
 
-export const Route = createFileRoute("/notes/")({
+export const Route = createFileRoute("/notes")({
   component: RouteComponent,
 });
 
@@ -165,7 +160,7 @@ function RouteComponent() {
     onSuccess: () => refetch(),
   });
 
-  if (!isLoaded) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
         <div className="flex gap-2 text-foreground">
@@ -190,18 +185,18 @@ function RouteComponent() {
             </AlertDescription>
           </Alert>
           <div className="flex gap-2">
-            <SignInButton>
+            <Link to="/auth/sign-in">
               <Button variant={"default"} className="gap-2 flex-1 rounded-sm">
                 <LogIn />
                 Sign In
               </Button>
-            </SignInButton>
-            <SignUpButton>
+            </Link>
+            <Link to="/auth/sign-up">
               <Button variant={"secondary"} className="gap-2 flex-1 rounded-sm">
                 <UserPlus />
                 Sign Up
               </Button>
-            </SignUpButton>
+            </Link>
           </div>
         </div>
       </div>
@@ -248,14 +243,7 @@ function RouteComponent() {
             </DropdownMenu>
           </div>
         </div>
-        {isLoading ? (
-          <div className="w-full h-full justify-center items-center">
-            <div className="flex gap-2 text-foreground">
-              <Spinner />
-              <span className="text-xl">Loading notes...</span>
-            </div>
-          </div>
-        ) : error || notes === undefined ? (
+        {error || notes === undefined ? (
           <Alert variant={"destructive"}>
             <AlertTitle className="text-2xl">Cannot load notes</AlertTitle>
             <AlertDescription className="text-base">
@@ -273,7 +261,7 @@ function RouteComponent() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
             {notes.map((note) => (
-              <Link to={`/notes/${note.id}`} key={note.id}>
+              <Link to={`/note/${note.id}`} key={note.id}>
                 <NoteCard
                   key={note.id}
                   note={note}

@@ -9,26 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as NotesRouteImport } from './routes/notes'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as NotesIndexRouteImport } from './routes/notes/index'
-import { Route as NotesNoteIdRouteImport } from './routes/notes/$noteId'
+import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
+import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
+import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
 import { Route as ApiWebhooksPolarRouteImport } from './routes/api/webhooks/polar'
-import { Route as ApiWebhooksClerkRouteImport } from './routes/api/webhooks/clerk'
 
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NotesIndexRoute = NotesIndexRouteImport.update({
-  id: '/notes/',
-  path: '/notes/',
+const NoteNoteIdRoute = NoteNoteIdRouteImport.update({
+  id: '/note/$noteId',
+  path: '/note/$noteId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NotesNoteIdRoute = NotesNoteIdRouteImport.update({
-  id: '/notes/$noteId',
-  path: '/notes/$noteId',
+const AuthSignUpRoute = AuthSignUpRouteImport.update({
+  id: '/auth/sign-up',
+  path: '/auth/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/auth/sign-in',
+  path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
@@ -41,75 +52,84 @@ const ApiWebhooksPolarRoute = ApiWebhooksPolarRouteImport.update({
   path: '/api/webhooks/polar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiWebhooksClerkRoute = ApiWebhooksClerkRouteImport.update({
-  id: '/api/webhooks/clerk',
-  path: '/api/webhooks/clerk',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/notes': typeof NotesRoute
   '/api/checkout': typeof ApiCheckoutRoute
-  '/notes/$noteId': typeof NotesNoteIdRoute
-  '/notes': typeof NotesIndexRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/auth/sign-in': typeof AuthSignInRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
+  '/note/$noteId': typeof NoteNoteIdRoute
   '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/notes': typeof NotesRoute
   '/api/checkout': typeof ApiCheckoutRoute
-  '/notes/$noteId': typeof NotesNoteIdRoute
-  '/notes': typeof NotesIndexRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/auth/sign-in': typeof AuthSignInRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
+  '/note/$noteId': typeof NoteNoteIdRoute
   '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/notes': typeof NotesRoute
   '/api/checkout': typeof ApiCheckoutRoute
-  '/notes/$noteId': typeof NotesNoteIdRoute
-  '/notes/': typeof NotesIndexRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/auth/sign-in': typeof AuthSignInRoute
+  '/auth/sign-up': typeof AuthSignUpRoute
+  '/note/$noteId': typeof NoteNoteIdRoute
   '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/api/checkout'
-    | '/notes/$noteId'
     | '/notes'
-    | '/api/webhooks/clerk'
+    | '/api/checkout'
+    | '/auth/sign-in'
+    | '/auth/sign-up'
+    | '/note/$noteId'
     | '/api/webhooks/polar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/api/checkout'
-    | '/notes/$noteId'
     | '/notes'
-    | '/api/webhooks/clerk'
+    | '/api/checkout'
+    | '/auth/sign-in'
+    | '/auth/sign-up'
+    | '/note/$noteId'
     | '/api/webhooks/polar'
   id:
     | '__root__'
     | '/'
+    | '/notes'
     | '/api/checkout'
-    | '/notes/$noteId'
-    | '/notes/'
-    | '/api/webhooks/clerk'
+    | '/auth/sign-in'
+    | '/auth/sign-up'
+    | '/note/$noteId'
     | '/api/webhooks/polar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NotesRoute: typeof NotesRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
-  NotesNoteIdRoute: typeof NotesNoteIdRoute
-  NotesIndexRoute: typeof NotesIndexRoute
-  ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute
+  AuthSignInRoute: typeof AuthSignInRoute
+  AuthSignUpRoute: typeof AuthSignUpRoute
+  NoteNoteIdRoute: typeof NoteNoteIdRoute
   ApiWebhooksPolarRoute: typeof ApiWebhooksPolarRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -117,18 +137,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/notes/': {
-      id: '/notes/'
-      path: '/notes'
-      fullPath: '/notes'
-      preLoaderRoute: typeof NotesIndexRouteImport
+    '/note/$noteId': {
+      id: '/note/$noteId'
+      path: '/note/$noteId'
+      fullPath: '/note/$noteId'
+      preLoaderRoute: typeof NoteNoteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/notes/$noteId': {
-      id: '/notes/$noteId'
-      path: '/notes/$noteId'
-      fullPath: '/notes/$noteId'
-      preLoaderRoute: typeof NotesNoteIdRouteImport
+    '/auth/sign-up': {
+      id: '/auth/sign-up'
+      path: '/auth/sign-up'
+      fullPath: '/auth/sign-up'
+      preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/sign-in': {
+      id: '/auth/sign-in'
+      path: '/auth/sign-in'
+      fullPath: '/auth/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/checkout': {
@@ -145,22 +172,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksPolarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/webhooks/clerk': {
-      id: '/api/webhooks/clerk'
-      path: '/api/webhooks/clerk'
-      fullPath: '/api/webhooks/clerk'
-      preLoaderRoute: typeof ApiWebhooksClerkRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NotesRoute: NotesRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
-  NotesNoteIdRoute: NotesNoteIdRoute,
-  NotesIndexRoute: NotesIndexRoute,
-  ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
+  AuthSignInRoute: AuthSignInRoute,
+  AuthSignUpRoute: AuthSignUpRoute,
+  NoteNoteIdRoute: NoteNoteIdRoute,
   ApiWebhooksPolarRoute: ApiWebhooksPolarRoute,
 }
 export const routeTree = rootRouteImport
