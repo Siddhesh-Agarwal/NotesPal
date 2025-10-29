@@ -89,8 +89,8 @@ function RouteComponent() {
     <div className="bg-background h-screen grid place-items-center">
       <Card className="max-w-xl w-full">
         <CardHeader>
-          <CardTitle>Sign In</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl">Sign In</CardTitle>
+          <CardDescription className="text-lg">
             Enter your email and password to sign in.
           </CardDescription>
         </CardHeader>
@@ -130,12 +130,12 @@ function RouteComponent() {
                   </FormItem>
                 )}
               />
-              <div className="flex flex-col w-full">
+              <div className="flex flex-col w-full space-y-2">
                 <Button type="submit" disabled={!isLoaded}>
                   <LogInIcon />
                   Sign In
                 </Button>
-                <p className="mt-2 text-muted-foreground text-center">
+                <p className="text-muted-foreground text-center">
                   Don't have an account?{" "}
                   <Link
                     to="/auth/sign-up"

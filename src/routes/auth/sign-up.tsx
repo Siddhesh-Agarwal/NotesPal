@@ -221,12 +221,12 @@ function RouteComponent() {
                   </FormItem>
                 )}
               />
-              <div className="flex flex-col w-full">
+              <div className="flex flex-col w-full space-y-2">
                 <Button type="submit" disabled={!isLoaded} className="w-full">
                   <LogInIcon />
                   Sign Up
                 </Button>
-                <p className="mt-2 text-muted-foreground text-center">
+                <p className="text-muted-foreground text-center">
                   Already have an account?{" "}
                   <Link
                     to="/auth/sign-in"
