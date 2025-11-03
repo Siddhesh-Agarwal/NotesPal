@@ -1,4 +1,12 @@
-export const metadata = {
+type Meta = {
+  title: string;
+  description: string;
+  keywords: string[];
+  author: string;
+  site: string;
+};
+
+export const metadata: Meta = {
   title: "NotesPal",
   description: "A cutesy no-nonsense note-taking app",
   keywords: ["notes", "note-taking", "app", "notespal"],

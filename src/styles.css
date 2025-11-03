@@ -70,7 +70,7 @@
 
 :root {
     --background: #fff8e7;
-    --foreground: oklch(0.3485 0 0);
+    --foreground: oklch(0.2868 0.0084 75.25);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.3485 0 0);
     --popover: oklch(1 0 0);

@@ -10,7 +10,6 @@ import {
   EyeOffIcon,
   LogIn,
   PaletteIcon,
-  TicketSlashIcon,
   UserPlus,
   UserXIcon,
 } from "lucide-react";
@@ -19,6 +18,7 @@ import { toast } from "sonner";
 import z from "zod";
 import MarkdownPreview from "@/components/markdown-preview";
 import { TAPE_COLORS } from "@/components/note";
+import NotFoundPage from "@/components/page/not-found";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -278,20 +278,7 @@ function RouteComponent() {
   }
 
   if (fetchError || !note) {
-    return (
-      <div className="grid place-items-center h-screen">
-        <div className="max-w-lg w-full">
-          <Alert variant={"destructive"}>
-            <TicketSlashIcon />
-            <AlertTitle className="font-semibold">Note not found!</AlertTitle>
-            <AlertDescription>
-              {fetchError?.message ||
-                "The note you are trying to access does not exist."}
-            </AlertDescription>
-          </Alert>
-        </div>
-      </div>
-    );
+    return <NotFoundPage backTo="/notes" />;
   }
 
   return (
