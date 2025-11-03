@@ -3,12 +3,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { LogInIcon, MoveLeft } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -18,12 +20,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { metadata } from "@/data/meta";
 import { db } from "@/db";
 import { userTable } from "@/db/schema";
@@ -34,29 +42,35 @@ export const Route = createFileRoute("/auth/sign-up")({
   component: RouteComponent,
 });
 
-const formSchema = z.object({
+const signupFormSchema = z.object({
   firstName: z.string().min(2).max(100),
   lastName: z.string().min(2).max(100),
-  email: z.email(),
-  password: z.string().min(8),
+  email: z.email({ message: "Invalid email address" }),
+  password: z.string(),
   confirmPassword: z.string().min(8),
   termsAccepted: z.boolean().refine((value) => value, {
     message: "You must accept the terms and conditions",
   }),
 });
+const otpFormSchema = z.object({
+  otp: z
+    .string()
+    .min(6, { message: "OTP must be 6 digits" })
+    .max(6, { message: "OTP must be 6 digits" }),
+});
 
-type FormSchema = z.infer<typeof formSchema>;
+type SignupFormSchema = z.infer<typeof signupFormSchema>;
+type OtpFormSchema = z.infer<typeof otpFormSchema>;
 
 const createUserInfo = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       userId: z.string().min(1),
-      data: formSchema,
+      data: signupFormSchema,
     }),
   )
   .handler(async (request) => {
     const { data, userId } = request.data;
-    console.log(request);
     const { id: customerId } = await polar.customers.create({
       externalId: userId,
       email: data.email,
@@ -76,14 +90,18 @@ const createUserInfo = createServerFn({ method: "POST" })
   });
 
 function RouteComponent() {
-  const form = useForm<FormSchema>({
-    resolver: zodResolver(formSchema),
+  const signupForm = useForm<SignupFormSchema>({
+    resolver: zodResolver(signupFormSchema),
+  });
+  const otpForm = useForm<OtpFormSchema>({
+    resolver: zodResolver(otpFormSchema),
   });
   const { isLoaded, signUp, setActive } = useSignUp();
+  const [verifying, setVerifying] = useState(false);
 
-  async function onSubmit(data: FormSchema) {
+  async function onSubmit(data: SignupFormSchema) {
     if (data.password !== data.confirmPassword) {
-      form.setError("confirmPassword", {
+      signupForm.setError("confirmPassword", {
         type: "manual",
         message: "Passwords do not match",
       });
@@ -92,8 +110,6 @@ function RouteComponent() {
 
     if (!isLoaded) return;
 
-    console.log("User data:", data);
-
     try {
       const result = await signUp.create({
         firstName: data.firstName,
@@ -101,41 +117,19 @@ function RouteComponent() {
         emailAddress: data.email,
         password: data.password,
         legalAccepted: data.termsAccepted,
-        redirectUrl: "/notes",
       });
 
-      console.log("Sign-up result:", result);
-
-      if (result.status === "complete" && result.id) {
-        // Actually log them in
-        await setActive({ session: result.createdSessionId });
-
-        // Now create your user record
-        const user = await createUserInfo({
-          data: { userId: result.id, data },
-        });
-
-        // Wait for checkout to complete before redirecting
-        const params = new URLSearchParams();
-        params.append("products", "80b1520f-73f6-4f47-8110-cd16041497d9");
-        params.append("customerId", user.customerId);
-        params.append("customerExternalId", user.id);
-        params.append("customerName", user.name);
-        params.append("customerEmail", user.email);
-        const response = await fetch(`/api/portal?${params.toString()}`);
-        console.log("Response", response);
-        const { url } = await response.json();
-        if (url) {
-          window.location.href = url;
-        } else {
-          // Redirect to dashboard if no checkout needed
-          window.location.href = "/notes";
+      if (result.status === "complete") {
+        if (!result.id) {
+          toast.error("User ID not found");
+          return;
         }
+        await completeSignUp(result.id);
       } else {
-        result.prepareEmailAddressVerification({
-          strategy: "email_link",
-          redirectUrl: `${metadata.site}/notes`,
+        await result.prepareEmailAddressVerification({
+          strategy: "email_code",
         });
+        setVerifying(true);
       }
     } catch (err) {
       const name =
@@ -143,8 +137,135 @@ function RouteComponent() {
       const message =
         err instanceof Error ? err.message : "Please try again later";
       toast.error(name, { description: message });
-      console.error(err);
     }
+  }
+
+  async function verifyCode(values: OtpFormSchema) {
+    if (!isLoaded || !signUp) return;
+
+    try {
+      const result = await signUp.attemptEmailAddressVerification({
+        code: values.otp,
+      });
+
+      if (result.status === "complete") {
+        if (!result.createdUserId) {
+          toast.error("User ID not found");
+          return;
+        }
+        await completeSignUp(result.createdUserId);
+      } else {
+        toast.error("Verification failed", {
+          description: "Invalid code. Please try again.",
+        });
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Verification failed";
+      toast.error("Error", { description: message });
+    }
+  }
+
+  async function completeSignUp(userId: string) {
+    if (!signUp) return;
+
+    await setActive({ session: signUp.createdSessionId });
+    const user = await createUserInfo({
+      data: { userId, data: signupForm.getValues() },
+    });
+
+    const params = new URLSearchParams();
+    params.append("products", "80b1520f-73f6-4f47-8110-cd16041497d9");
+    params.append("customerId", user.customerId);
+    params.append("customerExternalId", user.id);
+    params.append("customerName", user.name);
+    params.append("customerEmail", user.email);
+
+    const response = await fetch(`/api/portal?${params.toString()}`);
+    const { url } = await response.json();
+    window.location.href = url || `${metadata.site}/notes`;
+  }
+
+  async function resentOTP() {
+    try {
+      await signUp?.prepareEmailAddressVerification({
+        strategy: "email_code",
+      });
+      toast.success("Code resent");
+    } catch {
+      toast.error("Failed to resend code");
+    }
+  }
+
+  if (verifying) {
+    return (
+      <div className="bg-background h-screen grid place-items-center">
+        <div className="max-w-xl w-full p-4">
+          <Link to="/" className="flex gap-2 mb-2 hover:underline">
+            <MoveLeft />
+            Back
+          </Link>
+          <Card className="w-full border-border shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-2xl">Verify Email</CardTitle>
+              <CardDescription className="text-lg">
+                Enter the 6-digit code sent to your email
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...otpForm}>
+                <form
+                  onSubmit={otpForm.handleSubmit(verifyCode)}
+                  className="flex flex-col items-center space-y-4"
+                >
+                  <FormField
+                    control={otpForm.control}
+                    name="otp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Enter OTP</FormLabel>
+                        <FormControl>
+                          <InputOTP maxLength={6} {...field}>
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                          <FormMessage />
+                        </FormControl>
+                        <FormDescription>
+                          Enter the 6-digit code sent to your email.
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex gap-2">
+                    <CardAction>
+                      <Button type="submit" variant="default">
+                        Verify
+                      </Button>
+                    </CardAction>
+                    <CardAction>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={async () => resentOTP()}
+                      >
+                        Resend Code
+                      </Button>
+                    </CardAction>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -162,14 +283,14 @@ function RouteComponent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
+            <Form {...signupForm}>
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={signupForm.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
                 <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 space-x-0 md:space-x-4">
                   <FormField
-                    control={form.control}
+                    control={signupForm.control}
                     name="firstName"
                     render={({ field }) => (
                       <FormItem className="flex-1">
@@ -186,7 +307,7 @@ function RouteComponent() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={signupForm.control}
                     name="lastName"
                     render={({ field }) => (
                       <FormItem className="flex-1">
@@ -204,7 +325,7 @@ function RouteComponent() {
                   />
                 </div>
                 <FormField
-                  control={form.control}
+                  control={signupForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
@@ -222,7 +343,7 @@ function RouteComponent() {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={signupForm.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
@@ -239,7 +360,7 @@ function RouteComponent() {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={signupForm.control}
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
@@ -256,7 +377,7 @@ function RouteComponent() {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={signupForm.control}
                   name="termsAccepted"
                   render={({ field }) => (
                     <FormItem className="flex">
@@ -285,8 +406,8 @@ function RouteComponent() {
                     type="submit"
                     disabled={
                       !isLoaded ||
-                      !form.formState.isValid ||
-                      form.formState.isSubmitting
+                      !signupForm.formState.isValid ||
+                      signupForm.formState.isSubmitting
                     }
                     className="w-full"
                   >
