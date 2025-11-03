@@ -60,29 +60,22 @@ function RouteComponent() {
       password: "",
     },
   });
-  const { signIn, isLoaded } = useSignIn();
+  const { signIn, isLoaded, setActive } = useSignIn();
 
   async function onSubmit(values: FormSchema) {
     if (!isLoaded) {
       toast.error("Please wait for the app to load");
       return;
     }
-    await signIn
-      .create({
-        strategy: "password",
-        password: values.password,
-        identifier: values.email,
-      })
-      .then(async () => {
-        const doesUserExist = await checkExists({
-          data: { email: values.email },
-        });
-        if (!doesUserExist) {
-          toast.error("User does not exist");
-          return;
-        }
-        toast.success("Logged in successfully");
-      });
+    const result = await signIn.create({
+      strategy: "password",
+      password: values.password,
+      identifier: values.email,
+    });
+    await setActive({
+      redirectUrl: "/notes",
+      session: result.createdSessionId,
+    });
   }
 
   return (

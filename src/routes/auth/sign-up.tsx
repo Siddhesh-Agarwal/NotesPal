@@ -21,8 +21,10 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { metadata } from "@/data/meta";
 import { db } from "@/db";
 import { userTable } from "@/db/schema";
 import { polar } from "@/integrations/polar";
@@ -60,20 +62,24 @@ const createUserInfo = createServerFn({ method: "POST" })
       email: data.email,
       name: `${data.firstName} ${data.lastName}`,
     });
-    await db.insert(userTable).values({
-      id: userId,
-      email: data.email,
-      name: `${data.firstName} ${data.lastName}`,
-      customerId: customerId,
-      salt: generateSalt(),
-    });
+    const [user] = await db
+      .insert(userTable)
+      .values({
+        id: userId,
+        email: data.email,
+        name: `${data.firstName} ${data.lastName}`,
+        customerId: customerId,
+        salt: generateSalt(),
+      })
+      .returning();
+    return user;
   });
 
 function RouteComponent() {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
   });
-  const { isLoaded, signUp } = useSignUp();
+  const { isLoaded, signUp, setActive } = useSignUp();
 
   async function onSubmit(data: FormSchema) {
     if (data.password !== data.confirmPassword) {
@@ -83,41 +89,72 @@ function RouteComponent() {
       });
       return;
     }
-    if (!isLoaded) {
-      return;
-    }
-    await signUp
-      .create({
+
+    if (!isLoaded) return;
+
+    console.log("User data:", data);
+
+    try {
+      const result = await signUp.create({
         firstName: data.firstName,
         lastName: data.lastName,
         emailAddress: data.email,
         password: data.password,
         legalAccepted: data.termsAccepted,
         redirectUrl: "/notes",
-      })
-      .then(async (result) => {
-        const userId = result.id;
-        if (!userId) {
-          toast.error("User sign up failed");
-          return;
-        }
-        await createUserInfo({ data: { userId, data } });
-        if (result.status === "complete") {
-          toast.success("User signed up successfully");
-        } else {
-          toast.error("User sign up failed");
-        }
       });
+
+      console.log("Sign-up result:", result);
+
+      if (result.status === "complete" && result.id) {
+        // Actually log them in
+        await setActive({ session: result.createdSessionId });
+
+        // Now create your user record
+        const user = await createUserInfo({
+          data: { userId: result.id, data },
+        });
+
+        // Wait for checkout to complete before redirecting
+        const params = new URLSearchParams();
+        params.append("products", "80b1520f-73f6-4f47-8110-cd16041497d9");
+        params.append("customerId", user.customerId);
+        params.append("customerExternalId", user.id);
+        params.append("customerName", user.name);
+        params.append("customerEmail", user.email);
+        const response = await fetch(`/api/portal?${params.toString()}`);
+        console.log("Response", response);
+        const { url } = await response.json();
+        if (url) {
+          window.location.href = url;
+        } else {
+          // Redirect to dashboard if no checkout needed
+          window.location.href = "/notes";
+        }
+      } else {
+        result.prepareEmailAddressVerification({
+          strategy: "email_link",
+          redirectUrl: `${metadata.site}/notes`,
+        });
+      }
+    } catch (err) {
+      const name =
+        err instanceof Error ? err.name : "An unknown error occurred";
+      const message =
+        err instanceof Error ? err.message : "Please try again later";
+      toast.error(name, { description: message });
+      console.error(err);
+    }
   }
 
   return (
     <div className="bg-background h-screen grid place-items-center">
-      <div className="max-w-xl w-full">
+      <div className="max-w-xl w-full p-4">
         <Link to="/" className="flex gap-2 mb-2 hover:underline">
           <MoveLeft />
           Back
         </Link>
-        <Card className="w-full">
+        <Card className="w-full border-border shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl">Sign Up</CardTitle>
             <CardDescription className="text-lg">
@@ -130,7 +167,7 @@ function RouteComponent() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
-                <div className="flex space-x-4">
+                <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 space-x-0 md:space-x-4">
                   <FormField
                     control={form.control}
                     name="firstName"
@@ -144,6 +181,7 @@ function RouteComponent() {
                             className="border-border"
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -160,6 +198,7 @@ function RouteComponent() {
                             className="border-border"
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -178,6 +217,7 @@ function RouteComponent() {
                           className="border-border"
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -194,6 +234,7 @@ function RouteComponent() {
                           className="border-border"
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -210,6 +251,7 @@ function RouteComponent() {
                           className="border-border"
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -225,12 +267,29 @@ function RouteComponent() {
                           className="border-border"
                         />
                       </FormControl>
-                      <FormLabel>Terms Accepted</FormLabel>
+                      <FormLabel>
+                        Accept the
+                        <Link
+                          to="/terms-and-conditions"
+                          target="_blank"
+                          className="font-semibold hover:underline"
+                        >
+                          Terms and Conditions
+                        </Link>
+                      </FormLabel>
                     </FormItem>
                   )}
                 />
                 <div className="flex flex-col w-full space-y-2">
-                  <Button type="submit" disabled={!isLoaded} className="w-full">
+                  <Button
+                    type="submit"
+                    disabled={
+                      !isLoaded ||
+                      !form.formState.isValid ||
+                      form.formState.isSubmitting
+                    }
+                    className="w-full"
+                  >
                     <LogInIcon />
                     Sign Up
                   </Button>
