@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useId } from "react";
 
 export const Route = createFileRoute("/terms-and-conditions")({
   component: RouteComponent,
@@ -7,12 +8,13 @@ export const Route = createFileRoute("/terms-and-conditions")({
 function RouteComponent() {
   return (
     <main
-      role="main"
       aria-labelledby="title"
       className="prose max-w-2xl mx-auto p-4 text-justify"
     >
       <header>
-        <h1 id="title">Terms &amp; Conditions — NotesPal</h1>
+        <h1 id={useId()} className="mb-1">
+          Terms &amp; Conditions - NotesPal
+        </h1>
         <span>
           <strong>Last updated:</strong> October 31, 2025
         </span>
@@ -26,7 +28,7 @@ function RouteComponent() {
         </p>
       </header>
 
-      <section id="eligibility">
+      <section id={useId()}>
         <h2>1. Eligibility</h2>
         <p>
           You must be at least 13 years old (or the legal age in your country)
@@ -35,7 +37,7 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="account-registration">
+      <section id={useId()}>
         <h2>2. Account Registration</h2>
         <p>
           NotesPal uses <strong>Clerk</strong> as its authentication provider.
@@ -52,7 +54,7 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="subscription-payment">
+      <section id={useId()}>
         <h2>3. Subscription and Payment</h2>
         <p>
           NotesPal operates on a subscription model priced at{" "}
@@ -66,7 +68,7 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="data-storage">
+      <section id={useId()}>
         <h2>4. Data Storage and Encryption</h2>
         <p>
           Your notes and related data are stored on{" "}
@@ -83,7 +85,7 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="data-sync">
+      <section id={useId()}>
         <h2>5. Data Sync and Access</h2>
         <p>
           To allow global access to your notes, NotesPal synchronizes your
@@ -98,7 +100,7 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="acceptable-use">
+      <section id={useId()}>
         <h2>6. Acceptable Use</h2>
         <p>You agree not to use NotesPal for:</p>
         <ul>
@@ -115,7 +117,7 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="intellectual-property">
+      <section id={useId()}>
         <h2>7. Intellectual Property</h2>
         <p>
           All rights, trademarks, and content related to NotesPal (excluding
@@ -125,7 +127,7 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="disclaimer">
+      <section id={useId()}>
         <h2>8. Disclaimer of Warranties</h2>
         <p>
           NotesPal is provided on an <strong>“as is”</strong> and{" "}
@@ -138,7 +140,7 @@ function RouteComponent() {
         <p>Use the Service at your own risk.</p>
       </section>
 
-      <section id="limitation-liability">
+      <section id={useId()}>
         <h2>9. Limitation of Liability</h2>
         <p>
           To the fullest extent permitted by law,{" "}
@@ -148,12 +150,11 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="termination">
+      <section id={useId()}>
         <h2>10. Termination</h2>
         <p>
           You may delete your account at any time. Upon deletion, your data will
-          be removed from active systems within a reasonable timeframe, though
-          encrypted backups may persist for a limited period.
+          be removed from active systems immediately.
         </p>
         <p>
           We reserve the right to suspend or terminate accounts that violate
@@ -161,48 +162,42 @@ function RouteComponent() {
         </p>
       </section>
 
-      <section id="changes-to-terms">
+      <section id={useId()}>
         <h2>11. Changes to These Terms</h2>
         <p>
           We may update these Terms from time to time. Updates will be posted
           within the app or at{" "}
-          <a href="https://siddhesh.cc" target="_blank">
-            https://siddhesh.cc
+          <a href="https://siddhesh.cc" target="_blank" rel="noopener">
+            siddhesh.cc
           </a>
           . Continued use after an update constitutes acceptance of the revised
           Terms.
         </p>
       </section>
 
-      <section id="contact">
+      <section id={useId()}>
         <h2>12. Contact Us</h2>
         <p>For questions, support, or legal inquiries, reach out to:</p>
         <strong>Siddhesh Agarwal</strong>
-        <div className="ml-4">
-          Email:{" "}
-          <a href="mailto:siddhesh.agarwal@gmail.com">
-            siddhesh.agarwal@gmail.com
-          </a>
-        </div>
-        <div className="ml-4">
-          Website:{" "}
-          <a
-            href="https://siddhesh.cc"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            https://siddhesh.cc
-          </a>
-        </div>
+        <ul>
+          <li>
+            Email:{" "}
+            <a href="mailto:siddhesh.agarwal@gmail.com">
+              siddhesh.agarwal@gmail.com
+            </a>
+          </li>
+          <li>
+            Website:{" "}
+            <a
+              href="https://siddhesh.cc"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              siddhesh.cc
+            </a>
+          </li>
+        </ul>
       </section>
-
-      <footer>
-        <p>
-          Thank you for choosing NotesPal. By creating an account or using the
-          Service, you confirm that you have read, understood, and agreed to
-          these Terms.
-        </p>
-      </footer>
     </main>
   );
 }

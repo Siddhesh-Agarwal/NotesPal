@@ -1,6 +1,6 @@
 import { useSignIn } from "@clerk/clerk-react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { LogInIcon, MoveLeft } from "lucide-react";
@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { db } from "@/db";
 import { userTable } from "@/db/schema";
+import { useStore } from "@/store";
 
 export const Route = createFileRoute("/auth/sign-in")({
   component: RouteComponent,
@@ -37,7 +38,7 @@ const formSchema = z.object({
 
 type FormSchema = z.infer<typeof formSchema>;
 
-const checkExists = createServerFn({ method: "GET" })
+const getUser = createServerFn({ method: "GET" })
   .inputValidator(
     z.object({
       email: z.email(),
@@ -49,7 +50,7 @@ const checkExists = createServerFn({ method: "GET" })
       .select()
       .from(userTable)
       .where(eq(userTable.email, email));
-    return user !== null;
+    return user;
   });
 
 function RouteComponent() {
@@ -61,6 +62,12 @@ function RouteComponent() {
     },
   });
   const { signIn, isLoaded, setActive } = useSignIn();
+  const { userId, setUser } = useStore((s) => s);
+  const navigate = useNavigate();
+
+  if (userId !== null) {
+    navigate({ to: "/notes", ignoreBlocker: true });
+  }
 
   async function onSubmit(values: FormSchema) {
     if (!isLoaded) {
@@ -72,10 +79,20 @@ function RouteComponent() {
       password: values.password,
       identifier: values.email,
     });
-    await setActive({
-      redirectUrl: "/notes",
-      session: result.createdSessionId,
-    });
+    if (result.status === "complete") {
+      const user = await getUser({ data: { email: values.email } });
+      setUser({
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        customerId: user.customerId,
+      });
+      await setActive({
+        redirectUrl: "/notes",
+        session: result.createdSessionId,
+      });
+    }
   }
 
   return (

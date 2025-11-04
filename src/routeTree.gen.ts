@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as SuccessRouteImport } from './routes/success'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
@@ -28,6 +29,11 @@ const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
   path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotesRoute = NotesRouteImport.update({
@@ -74,6 +80,7 @@ const ApiWebhooksPolarRoute = ApiWebhooksPolarRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/notes': typeof NotesRoute
+  '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/notes': typeof NotesRoute
+  '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/notes': typeof NotesRoute
+  '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/notes'
+    | '/profile'
     | '/success'
     | '/terms-and-conditions'
     | '/api/checkout'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/notes'
+    | '/profile'
     | '/success'
     | '/terms-and-conditions'
     | '/api/checkout'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/notes'
+    | '/profile'
     | '/success'
     | '/terms-and-conditions'
     | '/api/checkout'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   NotesRoute: typeof NotesRoute
+  ProfileRoute: typeof ProfileRoute
   SuccessRoute: typeof SuccessRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/success'
       fullPath: '/success'
       preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notes': {
@@ -238,6 +258,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   NotesRoute: NotesRoute,
+  ProfileRoute: ProfileRoute,
   SuccessRoute: SuccessRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,

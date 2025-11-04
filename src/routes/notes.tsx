@@ -1,16 +1,9 @@
-import { useClerk, useUser } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
-import {
-  LogIn,
-  LogOutIcon,
-  PlusIcon,
-  UserIcon,
-  UserPlus,
-  UserXIcon,
-} from "lucide-react";
+import { DollarSign, LogOutIcon, PlusIcon, UserIcon } from "lucide-react";
 import z from "zod";
 import { NoteCard, TAPE_COLORS } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -32,6 +25,7 @@ import {
   decryptNote,
   deriveMasterKey,
 } from "@/lib/encrypt";
+import { useStore } from "@/store";
 
 export const Route = createFileRoute("/notes")({
   component: RouteComponent,
@@ -136,68 +130,42 @@ const deleteNoteFn = createServerFn({ method: "POST" })
   });
 
 function RouteComponent() {
-  const { isLoaded, user } = useUser();
-  const { redirectToUserProfile, signOut } = useClerk();
+  // const { isLoaded, user } = useUser();
+  const { userId, resetUser, firstName, lastName, email } = useStore();
+  const navigate = useNavigate();
+  const { signOut } = useClerk();
   const {
     data: notes,
     isLoading,
     refetch,
     error,
   } = useQuery({
-    queryKey: ["notes", user?.id],
-    queryFn: () => getNotesFn({ data: { userId: user?.id || "" } }),
-    enabled: !!user?.id,
+    queryKey: ["notes", userId],
+    queryFn: () => getNotesFn({ data: { userId: userId || "" } }),
+    enabled: !!userId,
   });
   const { mutateAsync: deleteNoteAsync } = useMutation({
-    mutationKey: ["deleteNote", user?.id],
+    mutationKey: ["deleteNote", userId],
     mutationFn: ({ id }: { id: string }) =>
-      deleteNoteFn({ data: { userId: user?.id || "", noteId: id } }),
+      deleteNoteFn({ data: { userId: userId || "", noteId: id } }),
     onSuccess: () => refetch(),
   });
   const { mutateAsync: createNoteAsync } = useMutation({
-    mutationKey: ["createNote", user?.id],
-    mutationFn: () => createNoteFn({ data: { userId: user?.id || "" } }),
+    mutationKey: ["createNote", userId],
+    mutationFn: () => createNoteFn({ data: { userId: userId || "" } }),
     onSuccess: () => refetch(),
   });
 
-  if (!isLoaded || isLoading) {
+  if (userId === null) {
+    navigate({ to: "/auth/sign-in" });
+  }
+
+  if (isLoading) {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
         <div className="flex gap-2 text-foreground">
           <Spinner />
           <span className="text-xl">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="grid place-items-center h-screen">
-        <div className="max-w-lg w-full flex flex-col gap-4">
-          <Alert variant={"destructive"}>
-            <UserXIcon />
-            <AlertTitle className="font-semibold">
-              You are not logged in!
-            </AlertTitle>
-            <AlertDescription>
-              Please sign in to access this note.
-            </AlertDescription>
-          </Alert>
-          <div className="flex gap-2">
-            <Link to="/auth/sign-in">
-              <Button variant={"default"} className="gap-2 flex-1 rounded-sm">
-                <LogIn />
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/auth/sign-up">
-              <Button variant={"secondary"} className="gap-2 flex-1 rounded-sm">
-                <UserPlus />
-                Sign Up
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
     );
@@ -217,25 +185,36 @@ function RouteComponent() {
               New Note
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger>
-                <Avatar>
-                  <AvatarImage src={user?.imageUrl ?? ""} />
+              <DropdownMenuTrigger className="cursor-pointer">
+                <Avatar className="outline">
+                  <AvatarImage
+                    src={`https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${email}`}
+                  />
                   <AvatarFallback>
-                    {user?.fullName?.charAt(0) ?? ""}
+                    {`${firstName || ""}${lastName || ""}`.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2" onClick={() => {}}>
+                  <DollarSign />
+                  Manage Subscription
+                </DropdownMenuItem>
+                <Link to="/profile">
+                  <DropdownMenuItem className="gap-2">
+                    <UserIcon />
+                    Profile
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem
                   className="gap-2"
-                  onClick={() => redirectToUserProfile()}
+                  onClick={async () => {
+                    resetUser();
+                    await signOut();
+                  }}
                 >
-                  <UserIcon />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2" onClick={() => signOut()}>
                   <LogOutIcon />
                   Logout
                 </DropdownMenuItem>
@@ -261,7 +240,13 @@ function RouteComponent() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
             {notes.map((note) => (
-              <Link to={`/note/${note.id}`} key={note.id}>
+              <Link
+                to="/note/$noteId"
+                params={{
+                  noteId: note.id,
+                }}
+                key={note.id}
+              >
                 <NoteCard
                   key={note.id}
                   note={note}

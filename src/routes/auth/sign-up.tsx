@@ -1,6 +1,6 @@
 import { useSignUp } from "@clerk/clerk-react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { LogInIcon, MoveLeft } from "lucide-react";
 import { useState } from "react";
@@ -37,6 +37,7 @@ import { db } from "@/db";
 import { userTable } from "@/db/schema";
 import { polar } from "@/integrations/polar";
 import { generateSalt } from "@/lib/encrypt";
+import { useStore } from "@/store";
 
 export const Route = createFileRoute("/auth/sign-up")({
   component: RouteComponent,
@@ -81,7 +82,8 @@ const createUserInfo = createServerFn({ method: "POST" })
       .values({
         id: userId,
         email: data.email,
-        name: `${data.firstName} ${data.lastName}`,
+        firstName: data.firstName,
+        lastName: data.lastName,
         customerId: customerId,
         salt: generateSalt(),
       })
@@ -98,6 +100,12 @@ function RouteComponent() {
   });
   const { isLoaded, signUp, setActive } = useSignUp();
   const [verifying, setVerifying] = useState(false);
+  const { userId, setUser } = useStore((s) => s);
+  const navigate = useNavigate();
+
+  if (userId !== null) {
+    navigate({ to: "/notes", ignoreBlocker: true });
+  }
 
   async function onSubmit(data: SignupFormSchema) {
     if (data.password !== data.confirmPassword) {
@@ -173,15 +181,24 @@ function RouteComponent() {
     const user = await createUserInfo({
       data: { userId, data: signupForm.getValues() },
     });
+    setUser({
+      userId: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      customerId: user.customerId,
+    });
 
     const params = new URLSearchParams();
     params.append("products", "80b1520f-73f6-4f47-8110-cd16041497d9");
     params.append("customerId", user.customerId);
     params.append("customerExternalId", user.id);
-    params.append("customerName", user.name);
+    params.append("customerName", `${user.firstName} ${user.lastName}`);
     params.append("customerEmail", user.email);
 
     const response = await fetch(`/api/portal?${params.toString()}`);
+    console.log(response);
+
     const { url } = await response.json();
     window.location.href = url || `${metadata.site}/notes`;
   }

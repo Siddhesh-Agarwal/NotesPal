@@ -1,4 +1,3 @@
-import { SignInButton, SignUpButton, useAuth } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -8,10 +7,7 @@ import {
   ArrowLeftIcon,
   EyeIcon,
   EyeOffIcon,
-  LogIn,
   PaletteIcon,
-  UserPlus,
-  UserXIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -40,6 +36,7 @@ import {
   deriveMasterKey,
   encryptNoteContent,
 } from "@/lib/encrypt";
+import { useStore } from "@/store";
 import type { Note } from "@/types/note";
 
 export const Route = createFileRoute("/note/$noteId")({
@@ -139,8 +136,7 @@ const updateNoteFn = createServerFn({ method: "POST" })
 
 function RouteComponent() {
   const { noteId } = Route.useParams();
-  const { isLoaded, userId } = useAuth();
-
+  const { userId } = useStore();
   const {
     data,
     isLoading,
@@ -234,7 +230,7 @@ function RouteComponent() {
     setNote((prev) => (prev ? { ...prev, tapeColor: color } : null));
   }, []);
 
-  if (!isLoaded || isLoading) {
+  if (isLoading) {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
         <div className="flex gap-2 text-foreground">
@@ -246,35 +242,7 @@ function RouteComponent() {
   }
 
   if (!userId) {
-    return (
-      <div className="grid place-items-center h-screen">
-        <div className="max-w-lg w-full flex flex-col gap-4">
-          <Alert variant={"destructive"}>
-            <UserXIcon />
-            <AlertTitle className="font-semibold">
-              You are not logged in!
-            </AlertTitle>
-            <AlertDescription>
-              Please sign in to access this note.
-            </AlertDescription>
-          </Alert>
-          <div className="flex gap-2">
-            <SignInButton>
-              <Button variant={"default"} className="gap-2 flex-1 rounded-sm">
-                <LogIn />
-                Sign In
-              </Button>
-            </SignInButton>
-            <SignUpButton>
-              <Button variant={"secondary"} className="gap-2 flex-1 rounded-sm">
-                <UserPlus />
-                Sign Up
-              </Button>
-            </SignUpButton>
-          </div>
-        </div>
-      </div>
-    );
+    return <NotFoundPage backTo="/" />;
   }
 
   if (fetchError || !note) {
