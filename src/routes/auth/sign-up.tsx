@@ -260,6 +260,7 @@ function RouteComponent() {
                       </FormItem>
                     )}
                   />
+
                   <div className="flex gap-2">
                     <CardAction>
                       <Button type="submit" variant="default">
@@ -418,6 +419,11 @@ function RouteComponent() {
                     </FormItem>
                   )}
                 />
+
+                {/* Clerk's CAPTCHA widget */}
+                {/** biome-ignore lint/correctness/useUniqueElementIds: <https://clerk.com/docs/guides/development/custom-flows/authentication/bot-sign-up-protection> */}
+                <div id="clerk-captcha" />
+
                 <div className="flex flex-col w-full space-y-2">
                   <Button
                     type="submit"
