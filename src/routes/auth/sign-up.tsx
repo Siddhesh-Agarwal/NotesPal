@@ -214,14 +214,14 @@ function RouteComponent() {
     }
   }
 
-  if (verifying) {
-    return (
-      <div className="bg-background h-screen grid place-items-center">
-        <div className="max-w-xl w-full p-4">
-          <Link to="/" className="flex gap-2 mb-2 hover:underline">
-            <MoveLeft />
-            Back
-          </Link>
+  return (
+    <div className="bg-background h-screen grid place-items-center">
+      <div className="max-w-xl w-full p-4">
+        <Link to="/" className="flex gap-2 mb-2 hover:underline">
+          <MoveLeft />
+          Back
+        </Link>
+        {verifying ? (
           <Card className="w-full border-border shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl">Verify Email</CardTitle>
@@ -263,7 +263,15 @@ function RouteComponent() {
 
                   <div className="flex gap-2">
                     <CardAction>
-                      <Button type="submit" variant="default">
+                      <Button
+                        type="submit"
+                        variant="default"
+                        disabled={
+                          !isLoaded ||
+                          otpForm.formState.isSubmitting ||
+                          !otpForm.formState.isValid
+                        }
+                      >
                         Verify
                       </Button>
                     </CardAction>
@@ -281,43 +289,69 @@ function RouteComponent() {
               </Form>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-background h-screen grid place-items-center">
-      <div className="max-w-xl w-full p-4">
-        <Link to="/" className="flex gap-2 mb-2 hover:underline">
-          <MoveLeft />
-          Back
-        </Link>
-        <Card className="w-full border-border shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl">Sign Up</CardTitle>
-            <CardDescription className="text-lg">
-              Register for your notespal account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...signupForm}>
-              <form
-                onSubmit={signupForm.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 space-x-0 md:space-x-4">
+        ) : (
+          <Card className="w-full border-border shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-2xl">Sign Up</CardTitle>
+              <CardDescription className="text-lg">
+                Register for your notespal account
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...signupForm}>
+                <form
+                  onSubmit={signupForm.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 space-x-0 md:space-x-4">
+                    <FormField
+                      control={signupForm.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Jane"
+                              className="border-border"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={signupForm.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Doe"
+                              className="border-border"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={signupForm.control}
-                    name="firstName"
+                    name="email"
                     render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>First Name</FormLabel>
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Jane"
+                            type="email"
+                            placeholder="janedoe@example.com"
                             className="border-border"
+                            autoComplete="email"
                           />
                         </FormControl>
                         <FormMessage />
@@ -326,131 +360,102 @@ function RouteComponent() {
                   />
                   <FormField
                     control={signupForm.control}
-                    name="lastName"
+                    name="password"
                     render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>Last Name</FormLabel>
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Doe"
+                            type="password"
                             className="border-border"
+                            autoComplete="new-password"
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                <FormField
-                  control={signupForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="email"
-                          placeholder="janedoe@example.com"
-                          className="border-border"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signupForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="password"
-                          className="border-border"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signupForm.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="password"
-                          className="border-border"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={signupForm.control}
-                  name="termsAccepted"
-                  render={({ field }) => (
-                    <FormItem className="flex">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className="border-border"
-                        />
-                      </FormControl>
-                      <FormLabel>
-                        Accept the
-                        <Link
-                          to="/terms-and-conditions"
-                          target="_blank"
-                          className="font-semibold hover:underline"
-                        >
-                          Terms and Conditions
-                        </Link>
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={signupForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            className="border-border"
+                            autoComplete="new-password"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={signupForm.control}
+                    name="termsAccepted"
+                    render={({ field }) => (
+                      <FormItem className="flex">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="border-border"
+                          />
+                        </FormControl>
+                        <FormLabel>
+                          Accept the
+                          <Link
+                            to="/terms-and-conditions"
+                            target="_blank"
+                            className="font-semibold hover:underline"
+                          >
+                            Terms and Conditions
+                          </Link>
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Clerk's CAPTCHA widget */}
-                {/** biome-ignore lint/correctness/useUniqueElementIds: <https://clerk.com/docs/guides/development/custom-flows/authentication/bot-sign-up-protection> */}
-                <div id="clerk-captcha" />
+                  {/* Clerk's CAPTCHA widget */}
+                  {/** biome-ignore lint/correctness/useUniqueElementIds: <https://clerk.com/docs/guides/development/custom-flows/authentication/bot-sign-up-protection> */}
+                  <div
+                    id="clerk-captcha"
+                    data-cl-theme="light"
+                    data-cl-size="flexible"
+                  />
 
-                <div className="flex flex-col w-full space-y-2">
-                  <Button
-                    type="submit"
-                    disabled={
-                      !isLoaded ||
-                      !signupForm.formState.isValid ||
-                      signupForm.formState.isSubmitting
-                    }
-                    className="w-full"
-                  >
-                    <LogInIcon />
-                    Sign Up
-                  </Button>
-                  <p className="text-muted-foreground text-center">
-                    Already have an account?{" "}
-                    <Link
-                      to="/auth/sign-in"
-                      className="font-semibold hover:underline"
+                  <div className="flex flex-col w-full space-y-2">
+                    <Button
+                      type="submit"
+                      disabled={
+                        !isLoaded ||
+                        signupForm.formState.isSubmitting ||
+                        !signupForm.formState.isValid
+                      }
+                      className="w-full"
                     >
-                      Sign In
-                    </Link>
-                  </p>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                      <LogInIcon />
+                      Sign Up
+                    </Button>
+                    <p className="text-muted-foreground text-center">
+                      Already have an account?{" "}
+                      <Link
+                        to="/auth/sign-in"
+                        className="font-semibold hover:underline"
+                      >
+                        Sign In
+                      </Link>
+                    </p>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

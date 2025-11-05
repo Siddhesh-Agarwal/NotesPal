@@ -11,7 +11,6 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     context: { queryClient },
-    caseSensitive: true,
     defaultPreload: "intent",
     defaultErrorComponent: CatchBoundaryPage,
     defaultNotFoundComponent: () =>

@@ -38,26 +38,25 @@ export const Route = createFileRoute("/profile")({
   component: RouteComponent,
 });
 
-const formSchema = z.object({
+const profileFormSchema = z.object({
   firstName: z.string().min(2).max(100),
   lastName: z.string().min(2).max(100),
   email: z.email(),
 });
 
-type FormData = z.infer<typeof formSchema>;
-
-const changePwdFormSchema = z.object({
+const passwordFormSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(1),
   confirmNewPassword: z.string().min(1),
 });
 
-type ChangePwdFormData = z.infer<typeof changePwdFormSchema>;
+type ProfileFormData = z.infer<typeof profileFormSchema>;
+type PasswordFormData = z.infer<typeof passwordFormSchema>;
 
 function RouteComponent() {
   const { user, isLoaded } = useUser();
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const profileForm = useForm<ProfileFormData>({
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
@@ -65,8 +64,8 @@ function RouteComponent() {
     },
   });
 
-  const changePwdForm = useForm<ChangePwdFormData>({
-    resolver: zodResolver(changePwdFormSchema),
+  const passwordForm = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordFormSchema),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
@@ -80,7 +79,7 @@ function RouteComponent() {
     return <NotFoundPage backTo="/" />;
   }
 
-  async function handleUpdateUser(data: FormData) {
+  async function handleUpdateUser(data: ProfileFormData) {
     if (!user) {
       toast.error("User not found");
       return;
@@ -100,22 +99,29 @@ function RouteComponent() {
       });
   }
 
-  async function handleUpdatePassword(values: ChangePwdFormData) {
+  async function handleUpdatePassword(values: PasswordFormData) {
     if (!user) {
       toast.error("User not found");
       return;
     }
     if (values.confirmNewPassword !== values.newPassword) {
-      changePwdForm.setError("confirmNewPassword", {
+      passwordForm.setError("confirmNewPassword", {
         type: "custom",
         message: "Passwords do not match",
       });
       return;
     }
-    await user.updatePassword({
-      newPassword: values.newPassword,
-      currentPassword: values.currentPassword,
-    });
+    await user
+      .updatePassword({
+        newPassword: values.newPassword,
+        currentPassword: values.currentPassword,
+      })
+      .then(() => {
+        toast.success("Password updated successfully!");
+      })
+      .catch(() => {
+        toast.error("Password update failed.");
+      });
   }
 
   return (
@@ -130,14 +136,14 @@ function RouteComponent() {
         </CardHeader>
         <CardContent>
           <section className="flex flex-col gap-4">
-            <Form {...form}>
+            <Form {...profileForm}>
               <form
                 className="space-y-4"
-                onSubmit={form.handleSubmit(handleUpdateUser)}
+                onSubmit={profileForm.handleSubmit(handleUpdateUser)}
               >
                 <div className="flex w-full gap-4">
                   <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="firstName"
                     render={({ field }) => (
                       <FormItem className="flex-1">
@@ -150,7 +156,7 @@ function RouteComponent() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={profileForm.control}
                     name="lastName"
                     render={({ field }) => (
                       <FormItem className="flex-1">
@@ -164,7 +170,7 @@ function RouteComponent() {
                   />
                 </div>
                 <FormField
-                  control={form.control}
+                  control={profileForm.control}
                   name="email"
                   disabled
                   render={({ field }) => (
@@ -189,6 +195,7 @@ function RouteComponent() {
                 </div>
               </form>
             </Form>
+
             <Separator className="my-6" />
 
             <Dialog>
@@ -205,15 +212,13 @@ function RouteComponent() {
                     Enter your current password and new password to change your
                     password.
                   </DialogDescription>
-                  <Form {...changePwdForm}>
+                  <Form {...passwordForm}>
                     <form
                       className="flex flex-col gap-4"
-                      onSubmit={changePwdForm.handleSubmit(
-                        handleUpdatePassword,
-                      )}
+                      onSubmit={passwordForm.handleSubmit(handleUpdatePassword)}
                     >
                       <FormField
-                        control={changePwdForm.control}
+                        control={passwordForm.control}
                         name="currentPassword"
                         render={({ field }) => (
                           <FormItem>
@@ -230,7 +235,7 @@ function RouteComponent() {
                         )}
                       />
                       <FormField
-                        control={changePwdForm.control}
+                        control={passwordForm.control}
                         name="newPassword"
                         render={({ field }) => (
                           <FormItem>
@@ -247,7 +252,7 @@ function RouteComponent() {
                         )}
                       />
                       <FormField
-                        control={changePwdForm.control}
+                        control={passwordForm.control}
                         name="confirmNewPassword"
                         render={({ field }) => (
                           <FormItem>
@@ -265,7 +270,9 @@ function RouteComponent() {
                       />
 
                       <DialogFooter>
-                        <Button type="submit">Save</Button>
+                        <Button type="submit" disabled={!user}>
+                          Save
+                        </Button>
                       </DialogFooter>
                     </form>
                   </Form>

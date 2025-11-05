@@ -50,7 +50,7 @@ function RouteComponent() {
               If you provided an email, we've sent a confirmation below.
             </p>
 
-            {user?.primaryEmailAddress ? (
+            {user?.primaryEmailAddress && (
               <div className="mt-4 inline-flex items-center gap-3 rounded-full border px-4 py-2">
                 <Mail className="h-4 w-4 opacity-80" />
                 <span className="text-sm">
@@ -58,7 +58,7 @@ function RouteComponent() {
                 </span>
                 <Badge className="ml-2">Confirmed</Badge>
               </div>
-            ) : null}
+            )}
 
             <div className="mt-6 flex flex-col sm:flex-row sm:justify-center gap-3">
               <Link to="/notes">

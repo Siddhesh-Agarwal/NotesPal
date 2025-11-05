@@ -77,6 +77,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         name: "twitter:url",
         content: metadata.site,
       },
+      {
+        httpEquiv: "Content-Security-Policy",
+        content:
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev; script-src-elem 'self' 'unsafe-inline' https://challenges.cloudflare.com https://*.clerk.accounts.dev; worker-src 'self' blob:; frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev; connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com;",
+      },
     ],
     links: [
       {

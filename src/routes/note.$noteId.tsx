@@ -52,22 +52,20 @@ const getNoteFn = createServerFn({ method: "GET" })
   )
   .handler(async (req) => {
     const { userId, noteId } = req.data;
-    const [user] = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.id, userId));
-    if (!user) {
-      throw new Error("User not found");
+    const [result] = await db
+      .select({
+        note: notesTable,
+        user: userTable,
+      })
+      .from(notesTable)
+      .innerJoin(userTable, eq(notesTable.userId, userTable.id))
+      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)));
+    if (!result) {
+      throw new Error("Note or user not found");
     }
+    const { note, user } = result;
     if (!user.subscribedTill || user.subscribedTill < new Date()) {
       throw new Error("User not subscribed");
-    }
-    const [note] = await db
-      .select()
-      .from(notesTable)
-      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)));
-    if (!note) {
-      throw new Error("Note not found");
     }
     const masterKey = await deriveMasterKey(
       userId,
@@ -101,15 +99,8 @@ const updateNoteFn = createServerFn({ method: "POST" })
   )
   .handler(async (req) => {
     const { userId, noteId, note } = req.data;
-    const [user] = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.id, userId));
-    if (!user) {
-      throw new Error("User not found");
-    }
     const [fetchedNote] = await db
-      .select()
+      .select({ encryptionKey: notesTable.encryptionKey })
       .from(notesTable)
       .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)));
     if (!fetchedNote) {
@@ -155,6 +146,7 @@ function RouteComponent() {
     mutationFn: (note: { content: string; tapeColor: string }) =>
       updateNoteFn({ data: { noteId, userId: userId || "", note } }),
     onSuccess: () => {
+      pendingUpdateRef.current = null;
       queryClient.invalidateQueries({ queryKey: ["note", noteId] }).then(() => {
         toast.success("Note updated");
       });
@@ -170,14 +162,14 @@ function RouteComponent() {
 
   // Initialize note from query data
   useEffect(() => {
-    if (data) {
+    if (data && !pendingUpdateRef.current) {
       setNote(data);
     }
   }, [data]);
 
   // Debounced save with 1 second delay
   useEffect(() => {
-    if (!note?.content || !data) return;
+    if (!note || !data) return;
 
     // Check if note actually changed
     if (note.content === data.content && note.tapeColor === data.tapeColor) {
@@ -199,7 +191,6 @@ function RouteComponent() {
     saveTimeoutRef.current = setTimeout(() => {
       if (pendingUpdateRef.current) {
         updateNote(pendingUpdateRef.current);
-        pendingUpdateRef.current = null;
       }
     }, 1000);
 
@@ -208,7 +199,7 @@ function RouteComponent() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [note?.content, note?.tapeColor, data, updateNote]);
+  }, [note, data, updateNote]);
 
   // Save on unmount if there's a pending update
   useEffect(() => {
