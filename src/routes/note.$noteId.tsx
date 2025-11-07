@@ -1,5 +1,6 @@
+import { useUser } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
 import {
@@ -137,7 +138,6 @@ function RouteComponent() {
     queryFn: () => getNoteFn({ data: { userId: userId || "", noteId } }),
     enabled: !!noteId && !!userId,
   });
-
   const {
     mutate: updateNote,
     isPending,
@@ -152,13 +152,20 @@ function RouteComponent() {
       });
     },
   });
-
+  const navigate = useNavigate();
   const [note, setNote] = useState<Note | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingUpdateRef = useRef<Pick<Note, "content" | "tapeColor"> | null>(
     null,
   );
+  const { isSignedIn, isLoaded } = useUser();
+
+  useEffect(() => {
+    if (!isSignedIn && isLoaded) {
+      navigate({ to: "/auth/sign-in" });
+    }
+  }, [isSignedIn, isLoaded, navigate]);
 
   // Initialize note from query data
   useEffect(() => {

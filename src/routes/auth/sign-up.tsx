@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { LogInIcon, MoveLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -47,12 +47,13 @@ const signupFormSchema = z.object({
   firstName: z.string().min(2).max(100),
   lastName: z.string().min(2).max(100),
   email: z.email({ message: "Invalid email address" }),
-  password: z.string(),
-  confirmPassword: z.string().min(8),
+  password: z.string().min(1),
+  confirmPassword: z.string().min(1),
   termsAccepted: z.boolean().refine((value) => value, {
     message: "You must accept the terms and conditions",
   }),
 });
+
 const otpFormSchema = z.object({
   otp: z
     .string()
@@ -98,16 +99,44 @@ function RouteComponent() {
   const otpForm = useForm<OtpFormSchema>({
     resolver: zodResolver(otpFormSchema),
   });
-  const { isLoaded, signUp, setActive } = useSignUp();
-  const [verifying, setVerifying] = useState(false);
-  const { userId, setUser } = useStore((s) => s);
   const navigate = useNavigate();
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const { userId, setUser } = useStore();
+  const [verifying, setVerifying] = useState(false);
 
-  if (userId !== null) {
-    navigate({ to: "/notes", ignoreBlocker: true });
+  async function completeSignUp(userId: string) {
+    if (!signUp) return;
+
+    try {
+      await setActive({ session: signUp.createdSessionId });
+      const user = await createUserInfo({
+        data: { userId, data: signupForm.getValues() },
+      });
+      setUser({
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        customerId: user.customerId,
+      });
+
+      const params = new URLSearchParams();
+      params.append("products", "80b1520f-73f6-4f47-8110-cd16041497d9");
+      params.append("customerId", user.customerId);
+      params.append("customerExternalId", user.id);
+      params.append("customerName", `${user.firstName} ${user.lastName}`);
+      params.append("customerEmail", user.email);
+
+      const response = await fetch(`/api/portal?${params.toString()}`);
+      console.log(response);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Error creating user";
+      toast.error("Error", { description: message });
+    }
   }
 
-  async function onSubmit(data: SignupFormSchema) {
+  async function onSubmitSignUpForm(data: SignupFormSchema) {
     if (data.password !== data.confirmPassword) {
       signupForm.setError("confirmPassword", {
         type: "manual",
@@ -119,7 +148,7 @@ function RouteComponent() {
     if (!isLoaded) return;
 
     try {
-      const result = await signUp.create({
+      const signUpResult = await signUp.create({
         firstName: data.firstName,
         lastName: data.lastName,
         emailAddress: data.email,
@@ -127,14 +156,15 @@ function RouteComponent() {
         legalAccepted: data.termsAccepted,
       });
 
-      if (result.status === "complete") {
-        if (!result.id) {
+      if (signUpResult.status === "complete") {
+        if (!signUpResult.id) {
           toast.error("User ID not found");
           return;
         }
-        await completeSignUp(result.id);
+
+        await completeSignUp(signUpResult.id);
       } else {
-        await result.prepareEmailAddressVerification({
+        await signUpResult.prepareEmailAddressVerification({
           strategy: "email_code",
         });
         setVerifying(true);
@@ -148,7 +178,7 @@ function RouteComponent() {
     }
   }
 
-  async function verifyCode(values: OtpFormSchema) {
+  async function onSubmitVerifyCodeForm(values: OtpFormSchema) {
     if (!isLoaded || !signUp) return;
 
     try {
@@ -174,38 +204,11 @@ function RouteComponent() {
     }
   }
 
-  async function completeSignUp(userId: string) {
+  async function resentOTP() {
     if (!signUp) return;
 
-    await setActive({ session: signUp.createdSessionId });
-    const user = await createUserInfo({
-      data: { userId, data: signupForm.getValues() },
-    });
-    setUser({
-      userId: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      customerId: user.customerId,
-    });
-
-    const params = new URLSearchParams();
-    params.append("products", "80b1520f-73f6-4f47-8110-cd16041497d9");
-    params.append("customerId", user.customerId);
-    params.append("customerExternalId", user.id);
-    params.append("customerName", `${user.firstName} ${user.lastName}`);
-    params.append("customerEmail", user.email);
-
-    const response = await fetch(`/api/portal?${params.toString()}`);
-    console.log(response);
-
-    const { url } = await response.json();
-    window.location.href = url || `${metadata.site}/notes`;
-  }
-
-  async function resentOTP() {
     try {
-      await signUp?.prepareEmailAddressVerification({
+      await signUp.prepareEmailAddressVerification({
         strategy: "email_code",
       });
       toast.success("Code resent");
@@ -213,6 +216,12 @@ function RouteComponent() {
       toast.error("Failed to resend code");
     }
   }
+
+  useEffect(() => {
+    if (userId !== null) {
+      navigate({ to: "/notes", ignoreBlocker: true });
+    }
+  }, [userId, navigate]);
 
   return (
     <div className="bg-background h-screen grid place-items-center">
@@ -232,7 +241,7 @@ function RouteComponent() {
             <CardContent>
               <Form {...otpForm}>
                 <form
-                  onSubmit={otpForm.handleSubmit(verifyCode)}
+                  onSubmit={otpForm.handleSubmit(onSubmitVerifyCodeForm)}
                   className="flex flex-col items-center space-y-4"
                 >
                   <FormField
@@ -244,16 +253,34 @@ function RouteComponent() {
                         <FormControl>
                           <InputOTP maxLength={6} {...field}>
                             <InputOTPGroup>
-                              <InputOTPSlot index={0} />
-                              <InputOTPSlot index={1} />
-                              <InputOTPSlot index={2} />
-                              <InputOTPSlot index={3} />
-                              <InputOTPSlot index={4} />
-                              <InputOTPSlot index={5} />
+                              <InputOTPSlot
+                                index={0}
+                                className="border-border"
+                              />
+                              <InputOTPSlot
+                                index={1}
+                                className="border-border"
+                              />
+                              <InputOTPSlot
+                                index={2}
+                                className="border-border"
+                              />
+                              <InputOTPSlot
+                                index={3}
+                                className="border-border"
+                              />
+                              <InputOTPSlot
+                                index={4}
+                                className="border-border"
+                              />
+                              <InputOTPSlot
+                                index={5}
+                                className="border-border"
+                              />
                             </InputOTPGroup>
                           </InputOTP>
-                          <FormMessage />
                         </FormControl>
+                        <FormMessage />
                         <FormDescription>
                           Enter the 6-digit code sent to your email.
                         </FormDescription>
@@ -280,6 +307,7 @@ function RouteComponent() {
                         type="button"
                         variant="secondary"
                         onClick={async () => resentOTP()}
+                        disabled={!isLoaded || otpForm.formState.isSubmitting}
                       >
                         Resend Code
                       </Button>
@@ -300,7 +328,7 @@ function RouteComponent() {
             <CardContent>
               <Form {...signupForm}>
                 <form
-                  onSubmit={signupForm.handleSubmit(onSubmit)}
+                  onSubmit={signupForm.handleSubmit(onSubmitSignUpForm)}
                   className="space-y-4"
                 >
                   <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 space-x-0 md:space-x-4">

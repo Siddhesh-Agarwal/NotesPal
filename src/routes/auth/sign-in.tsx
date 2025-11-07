@@ -1,9 +1,10 @@
-import { useSignIn } from "@clerk/clerk-react";
+import { useSignIn, useUser } from "@clerk/clerk-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { LogInIcon, MoveLeft } from "lucide-react";
+import { useEffect, useEffectEvent } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/auth/sign-in")({
 
 const formSchema = z.object({
   email: z.email(),
-  password: z.string().min(8),
+  password: z.string().min(1),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -62,12 +63,20 @@ function RouteComponent() {
     },
   });
   const { signIn, isLoaded, setActive } = useSignIn();
-  const { userId, setUser } = useStore((s) => s);
+  const { user, isSignedIn, isLoaded: isUserLoaded } = useUser();
+  const store = useStore();
   const navigate = useNavigate();
 
-  if (userId !== null) {
-    navigate({ to: "/notes", ignoreBlocker: true });
-  }
+  const setUser = useEffectEvent(async (email: string) => {
+    const user = await getUser({ data: { email } });
+    store.setUser({
+      userId: user.id,
+      customerId: user.customerId,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
+  });
 
   async function onSubmit(values: FormSchema) {
     if (!isLoaded) {
@@ -80,20 +89,21 @@ function RouteComponent() {
       identifier: values.email,
     });
     if (result.status === "complete") {
-      const user = await getUser({ data: { email: values.email } });
-      setUser({
-        userId: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        customerId: user.customerId,
-      });
+      await setUser(values.email);
       await setActive({
         redirectUrl: "/notes",
         session: result.createdSessionId,
       });
     }
   }
+
+  useEffect(() => {
+    if (isUserLoaded && isSignedIn && user.primaryEmailAddress) {
+      setUser(user.primaryEmailAddress.emailAddress).then(() => {
+        navigate({ to: "/notes" });
+      });
+    }
+  }, [isUserLoaded, isSignedIn, navigate, setUser, user?.primaryEmailAddress]);
 
   return (
     <div className="bg-background h-screen grid place-items-center">
@@ -149,7 +159,14 @@ function RouteComponent() {
                   )}
                 />
                 <div className="flex flex-col w-full space-y-2">
-                  <Button type="submit" disabled={!isLoaded}>
+                  <Button
+                    type="submit"
+                    disabled={
+                      !isLoaded ||
+                      form.formState.isSubmitting ||
+                      !form.formState.isValid
+                    }
+                  >
                     <LogInIcon />
                     Sign In
                   </Button>

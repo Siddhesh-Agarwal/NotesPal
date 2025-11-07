@@ -1,9 +1,10 @@
-import { useClerk } from "@clerk/clerk-react";
+import { useAuth, useClerk, useUser } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
 import { DollarSign, LogOutIcon, PlusIcon, UserIcon } from "lucide-react";
+import { useEffect } from "react";
 import z from "zod";
 import { NoteCard, TAPE_COLORS } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -131,7 +132,10 @@ const deleteNoteFn = createServerFn({ method: "POST" })
 
 function RouteComponent() {
   // const { isLoaded, user } = useUser();
-  const { userId, resetUser, firstName, lastName, email } = useStore();
+  // const { userId, resetUser, firstName, lastName, email } = useStore();
+  const { resetUser } = useStore();
+  const { userId } = useAuth();
+  const { user, isSignedIn, isLoaded } = useUser();
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const {
@@ -156,9 +160,11 @@ function RouteComponent() {
     onSuccess: () => refetch(),
   });
 
-  if (userId === null) {
-    navigate({ to: "/auth/sign-in" });
-  }
+  useEffect(() => {
+    if (!isSignedIn && isLoaded) {
+      navigate({ to: "/auth/sign-in" });
+    }
+  }, [isSignedIn, isLoaded, navigate]);
 
   if (isLoading) {
     return (
@@ -188,10 +194,10 @@ function RouteComponent() {
               <DropdownMenuTrigger className="cursor-pointer">
                 <Avatar className="outline">
                   <AvatarImage
-                    src={`https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${email}`}
+                    src={`https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.primaryEmailAddress?.emailAddress}`}
                   />
                   <AvatarFallback>
-                    {`${firstName || ""}${lastName || ""}`.toUpperCase()}
+                    {`${user?.firstName || ""}${user?.lastName || ""}`.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>

@@ -2,10 +2,12 @@ import { useUser } from "@clerk/clerk-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/success")({
   component: RouteComponent,
@@ -15,16 +17,18 @@ function RouteComponent() {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!user) {
+      navigate({ to: "/" });
+    }
+  }, [user, navigate]);
+
   if (!isLoaded) {
     return (
       <div className="bg-background grid place-items-center">
         <Spinner />
       </div>
     );
-  }
-
-  if (!user) {
-    navigate({ to: "/", from: "/success" });
   }
 
   return (
@@ -61,11 +65,12 @@ function RouteComponent() {
             )}
 
             <div className="mt-6 flex flex-col sm:flex-row sm:justify-center gap-3">
-              <Link to="/notes">
-                <Button className="inline-flex gap-2">
-                  Continue
-                  <ArrowRight />
-                </Button>
+              <Link
+                to="/notes"
+                className={cn(buttonVariants(), "inline-flex gap-2")}
+              >
+                Continue
+                <ArrowRight />
               </Link>
             </div>
 
