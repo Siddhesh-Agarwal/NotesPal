@@ -1,18 +1,3 @@
-import { useUser } from "@clerk/clerk-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { and, eq } from "drizzle-orm";
-import {
-  AlertCircleIcon,
-  ArrowLeftIcon,
-  EyeIcon,
-  EyeOffIcon,
-  PaletteIcon,
-} from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import z from "zod";
 import MarkdownPreview from "@/components/markdown-preview";
 import { TAPE_COLORS } from "@/components/note";
 import NotFoundPage from "@/components/page/not-found";
@@ -39,6 +24,21 @@ import {
 } from "@/lib/encrypt";
 import { useStore } from "@/store";
 import type { Note } from "@/types/note";
+import { useUser } from "@clerk/clerk-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { and, eq } from "drizzle-orm";
+import {
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  EyeIcon,
+  EyeOffIcon,
+  PaletteIcon,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import z from "zod";
 
 export const Route = createFileRoute("/note/$noteId")({
   component: RouteComponent,
@@ -65,9 +65,9 @@ const getNoteFn = createServerFn({ method: "GET" })
       throw new Error("Note or user not found");
     }
     const { note, user } = result;
-    if (!user.subscribedTill || user.subscribedTill < new Date()) {
-      throw new Error("User not subscribed");
-    }
+    // if (!user.subscribedTill || user.subscribedTill < new Date()) {
+    //   throw new Error("User not subscribed");
+    // }
     const masterKey = await deriveMasterKey(
       userId,
       Buffer.from(user.salt, "hex"),
@@ -231,7 +231,7 @@ function RouteComponent() {
   if (isLoading) {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
-        <div className="flex gap-2 text-foreground">
+        <div className="flex flex-col gap-2 text-foreground items-center">
           <Spinner />
           <span className="text-xl">Loading...</span>
         </div>
