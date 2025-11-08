@@ -1,11 +1,3 @@
-import { useAuth, useClerk, useUser } from "@clerk/clerk-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { and, eq } from "drizzle-orm";
-import { DollarSign, LogOutIcon, PlusIcon, UserIcon } from "lucide-react";
-import { useEffect } from "react";
-import z from "zod";
 import { NoteCard, TAPE_COLORS } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,6 +19,14 @@ import {
   deriveMasterKey,
 } from "@/lib/encrypt";
 import { useStore } from "@/store";
+import { useAuth, useClerk, useUser } from "@clerk/clerk-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { and, eq } from "drizzle-orm";
+import { DollarSign, LogOutIcon, PlusIcon, UserIcon } from "lucide-react";
+import { useEffect } from "react";
+import z from "zod";
 
 export const Route = createFileRoute("/notes")({
   component: RouteComponent,
@@ -36,26 +36,20 @@ const getNotesFn = createServerFn({ method: "GET" })
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async (req) => {
     const { userId } = req.data;
-    const [user] = await db
+    const notes = await db
       .select()
-      .from(userTable)
+      .from(notesTable)
+      .innerJoin(userTable, eq(notesTable.userId, userTable.id))
       .where(eq(userTable.id, userId));
-    if (!user) {
+    if (notes.length === 0) {
       throw new Error("User not found. Please sign up or log in.");
     }
-    if (!user.subscribedTill || user.subscribedTill < new Date()) {
-      throw new Error(
-        "User has not subscribed. Please subscribe to create/read your notes.",
-      );
-    }
+    const user = notes[0].users;
     const masterKey = await deriveMasterKey(
       user.id,
       Buffer.from(user.salt, "hex"),
     );
-    const data = await db
-      .select()
-      .from(notesTable)
-      .where(eq(notesTable.userId, userId));
+    const data = notes.map((note) => note.notes);
 
     const decrypted = data.map((note) => {
       const { encryptedContent, encryptionKey, iv } = note;
@@ -169,7 +163,7 @@ function RouteComponent() {
   if (isLoading) {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
-        <div className="flex gap-2 text-foreground">
+        <div className="flex flex-col gap-2 text-foreground items-center">
           <Spinner />
           <span className="text-xl">Loading...</span>
         </div>
@@ -208,12 +202,13 @@ function RouteComponent() {
                   <DollarSign />
                   Manage Subscription
                 </DropdownMenuItem>
-                <Link to="/profile">
-                  <DropdownMenuItem className="gap-2">
-                    <UserIcon />
-                    Profile
-                  </DropdownMenuItem>
-                </Link>
+                <DropdownMenuItem
+                  className="gap-2"
+                  onClick={() => navigate({ to: "/profile" })}
+                >
+                  <UserIcon />
+                  Profile
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="gap-2"
                   onClick={async () => {
