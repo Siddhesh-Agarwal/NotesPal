@@ -1,10 +1,3 @@
-import { useUser } from "@clerk/clerk-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, Trash2, UserPen } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
 import NotFoundPage from "@/components/page/not-found";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +26,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { useUser } from "@clerk/clerk-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute } from "@tanstack/react-router";
+import { KeyRound, Trash2, UserPen } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
 
 export const Route = createFileRoute("/profile")({
   component: RouteComponent,
@@ -73,7 +74,16 @@ function RouteComponent() {
     },
   });
 
-  if (!isLoaded) return <div>Loading...</div>;
+  if (!isLoaded) {
+    return (
+      <div className="bg-background flex justify-center items-center h-screen">
+        <div className="flex flex-col gap-2 text-foreground items-center">
+          <Spinner />
+          <span className="text-xl">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (user === null) {
     return <NotFoundPage backTo="/" />;

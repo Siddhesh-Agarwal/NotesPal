@@ -1,13 +1,13 @@
-import { useUser } from "@clerk/clerk-react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Mail } from "lucide-react";
-import { motion } from "motion/react";
-import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { useUser } from "@clerk/clerk-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowRight, CheckCircle2, Mail } from "lucide-react";
+import { motion } from "motion/react";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/success")({
   component: RouteComponent,

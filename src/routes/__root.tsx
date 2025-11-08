@@ -1,3 +1,6 @@
+import { Toaster } from "@/components/ui/sonner";
+import { metadata } from "@/data/meta";
+import appCss from "@/styles.css?url";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
@@ -8,9 +11,6 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { Toaster } from "@/components/ui/sonner";
-import { metadata } from "@/data/meta";
-import appCss from "@/styles.css?url";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         httpEquiv: "Content-Security-Policy",
         content:
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev; script-src-elem 'self' 'unsafe-inline' https://challenges.cloudflare.com https://*.clerk.accounts.dev; worker-src 'self' blob:; frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev; connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com;",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev; script-src-elem 'self' 'unsafe-inline' https://challenges.cloudflare.com https://*.clerk.accounts.dev; worker-src 'self' blob:; frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev; connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com https://clerk-telemetry.com/v1/event;",
       },
     ],
     links: [

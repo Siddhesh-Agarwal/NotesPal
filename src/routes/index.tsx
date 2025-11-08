@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { metadata } from "@/data/meta";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
@@ -16,8 +18,6 @@ import {
   Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { Button } from "@/components/ui/button";
-import { metadata } from "@/data/meta";
 
 export const Route = createFileRoute("/")({
   component: App,

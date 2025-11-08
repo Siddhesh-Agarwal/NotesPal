@@ -1,12 +1,3 @@
-import { useSignUp } from "@clerk/clerk-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { LogInIcon, MoveLeft } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,6 +29,15 @@ import { userTable } from "@/db/schema";
 import { polar } from "@/integrations/polar";
 import { generateSalt } from "@/lib/encrypt";
 import { useStore } from "@/store";
+import { useSignUp } from "@clerk/clerk-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { LogInIcon, MoveLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
 
 export const Route = createFileRoute("/auth/sign-up")({
   component: RouteComponent,
@@ -322,7 +322,7 @@ function RouteComponent() {
             <CardHeader>
               <CardTitle className="text-2xl">Sign Up</CardTitle>
               <CardDescription className="text-lg">
-                Register for your notespal account
+                Register for your {metadata.title} account
               </CardDescription>
             </CardHeader>
             <CardContent>

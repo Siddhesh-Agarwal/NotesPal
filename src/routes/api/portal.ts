@@ -1,6 +1,6 @@
-import { env } from "node:process";
 import { CustomerPortal } from "@polar-sh/tanstack-start";
 import { createFileRoute } from "@tanstack/react-router";
+import { env } from "node:process";
 
 export const Route = createFileRoute("/api/portal")({
   server: {

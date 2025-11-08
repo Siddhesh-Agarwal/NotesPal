@@ -1,13 +1,3 @@
-import { useSignIn, useUser } from "@clerk/clerk-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
-import { LogInIcon, MoveLeft } from "lucide-react";
-import { useEffect, useEffectEvent } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +17,16 @@ import { Input } from "@/components/ui/input";
 import { db } from "@/db";
 import { userTable } from "@/db/schema";
 import { useStore } from "@/store";
+import { useSignIn, useUser } from "@clerk/clerk-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { eq } from "drizzle-orm";
+import { LogInIcon, MoveLeft } from "lucide-react";
+import { useEffect, useEffectEvent } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
 
 export const Route = createFileRoute("/auth/sign-in")({
   component: RouteComponent,
