@@ -1,27 +1,37 @@
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
-import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/clerk-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
+
+type Props = {
+  checkout_id: string | undefined;
+};
 
 export const Route = createFileRoute("/success")({
   component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): Props => {
+    return {
+      checkout_id: search.checkout_id?.toString() || undefined,
+    };
+  },
 });
 
 function RouteComponent() {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
+  const { checkout_id } = Route.useSearch();
 
   useEffect(() => {
-    if (!user) {
+    if ((isLoaded && !user) || checkout_id === undefined) {
       navigate({ to: "/" });
     }
-  }, [user, navigate]);
+  }, [user, navigate, checkout_id, isLoaded]);
 
   if (!isLoaded) {
     return (
@@ -60,7 +70,18 @@ function RouteComponent() {
                 <span className="text-sm">
                   {user.primaryEmailAddress.emailAddress}
                 </span>
-                <Badge className="ml-2">Confirmed</Badge>
+                <Badge className="ml-2 bg-green-500 text-white">
+                  Confirmed
+                </Badge>
+              </div>
+            )}
+            {/* Display checkout_id */}
+            {checkout_id && (
+              <div className="mt-4 items-center space-x-2 px-4 py-2">
+                <span className="text-sm">Checkout ID:</span>
+                <span className="text-muted-foreground/80 text-sm font-mono">
+                  {checkout_id}
+                </span>
               </div>
             )}
 
@@ -81,53 +102,6 @@ function RouteComponent() {
               </span>
             </div>
           </CardContent>
-
-          {/* Decorative confetti-ish dots — purely CSS/Tailwind for tiny motion */}
-          <div className="pointer-events-none absolute -translate-y-28 md:-translate-y-36">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-64 h-32 opacity-40"
-              viewBox="0 0 200 80"
-              fill="none"
-            >
-              <title className="sr-only">Confetti</title>
-              <circle
-                cx="18"
-                cy="20"
-                r="2.5"
-                className="text-chart-1"
-                fill="currentColor"
-              />
-              <circle
-                cx="40"
-                cy="10"
-                r="2"
-                className="text-chart-2"
-                fill="currentColor"
-              />
-              <circle
-                cx="86"
-                cy="22"
-                r="2.25"
-                className="text-chart-3"
-                fill="currentColor"
-              />
-              <circle
-                cx="150"
-                cy="8"
-                r="1.75"
-                className="text-chart-4"
-                fill="currentColor"
-              />
-              <circle
-                cx="180"
-                cy="26"
-                r="2"
-                className="text-chart-5"
-                fill="currentColor"
-              />
-            </svg>
-          </div>
         </Card>
       </motion.div>
     </div>

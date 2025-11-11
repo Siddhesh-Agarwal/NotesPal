@@ -41,18 +41,13 @@ const getNotesFn = createServerFn({ method: "GET" })
       .from(notesTable)
       .innerJoin(userTable, eq(notesTable.userId, userTable.id))
       .where(eq(userTable.id, userId));
-    if (notes.length === 0) {
-      throw new Error("User not found. Please sign up or log in.");
-    }
-    const user = notes[0].users;
-    const masterKey = await deriveMasterKey(
-      user.id,
-      Buffer.from(user.salt, "hex"),
-    );
-    const data = notes.map((note) => note.notes);
-
-    const decrypted = data.map((note) => {
-      const { encryptedContent, encryptionKey, iv } = note;
+    const decryptedNotes = notes.map(async (note) => {
+      const { notes, users } = note;
+      const masterKey = await deriveMasterKey(
+        users.id,
+        Buffer.from(users.salt, "hex"),
+      );
+      const { encryptedContent, encryptionKey, iv } = notes;
       const decryptedContent = decryptNote(
         encryptedContent,
         encryptionKey,
@@ -60,14 +55,14 @@ const getNotesFn = createServerFn({ method: "GET" })
         masterKey,
       );
       return {
-        id: note.id,
+        id: notes.id,
         content: decryptedContent,
-        tapeColor: note.tapeColor,
-        updatedAt: note.updatedAt,
-        createdAt: note.createdAt,
+        tapeColor: notes.tapeColor,
+        updatedAt: notes.updatedAt,
+        createdAt: notes.createdAt,
       };
     });
-    return decrypted;
+    return Promise.all(decryptedNotes);
   });
 
 const createNoteFn = createServerFn({ method: "POST" })

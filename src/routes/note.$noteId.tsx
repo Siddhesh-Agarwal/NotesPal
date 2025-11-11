@@ -1,3 +1,18 @@
+import { useUser } from "@clerk/clerk-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { and, eq } from "drizzle-orm";
+import {
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  EyeIcon,
+  EyeOffIcon,
+  PaletteIcon,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import z from "zod";
 import MarkdownPreview from "@/components/markdown-preview";
 import { TAPE_COLORS } from "@/components/note";
 import NotFoundPage from "@/components/page/not-found";
@@ -24,21 +39,6 @@ import {
 } from "@/lib/encrypt";
 import { useStore } from "@/store";
 import type { Note } from "@/types/note";
-import { useUser } from "@clerk/clerk-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { and, eq } from "drizzle-orm";
-import {
-  AlertCircleIcon,
-  ArrowLeftIcon,
-  EyeIcon,
-  EyeOffIcon,
-  PaletteIcon,
-} from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import z from "zod";
 
 export const Route = createFileRoute("/note/$noteId")({
   component: RouteComponent,
