@@ -1,3 +1,12 @@
+import { useAuth, useClerk, useUser } from "@clerk/clerk-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { and, eq } from "drizzle-orm";
+import { DollarSign, LogOutIcon, PlusIcon, UserIcon } from "lucide-react";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import z from "zod";
 import { NoteCard, TAPE_COLORS } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,14 +28,6 @@ import {
   deriveMasterKey,
 } from "@/lib/encrypt";
 import { useStore } from "@/store";
-import { useAuth, useClerk, useUser } from "@clerk/clerk-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { and, eq } from "drizzle-orm";
-import { DollarSign, LogOutIcon, PlusIcon, UserIcon } from "lucide-react";
-import { useEffect } from "react";
-import z from "zod";
 
 export const Route = createFileRoute("/notes")({
   component: RouteComponent,
@@ -43,10 +44,10 @@ const getNotesFn = createServerFn({ method: "GET" })
       .where(eq(userTable.id, userId));
     const decryptedNotes = notes.map(async (note) => {
       const { notes, users } = note;
-      const masterKey = await deriveMasterKey(
-        users.id,
-        Buffer.from(users.salt, "hex"),
-      );
+      const masterKey = await deriveMasterKey({
+        password: users.id,
+        salt: Buffer.from(users.salt, "hex"),
+      });
       const { encryptedContent, encryptionKey, iv } = notes;
       const decryptedContent = decryptNote(
         encryptedContent,
@@ -68,7 +69,7 @@ const getNotesFn = createServerFn({ method: "GET" })
 const createNoteFn = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
-      userId: z.string(),
+      userId: z.string().min(1),
     }),
   )
   .handler(async (req) => {
@@ -82,11 +83,11 @@ const createNoteFn = createServerFn({ method: "POST" })
     }
     const tapeColor =
       TAPE_COLORS[Math.floor(Math.random() * TAPE_COLORS.length)].value;
-    const masterKey = await deriveMasterKey(
-      user.id,
-      Buffer.from(user.salt, "hex"),
-    );
-    const encrypted = createEncryptedNote("", masterKey);
+    const masterKey = await deriveMasterKey({
+      password: user.id,
+      salt: Buffer.from(user.salt, "hex"),
+    });
+    const encrypted = createEncryptedNote({ content: "", masterKey });
     const [note] = await db
       .insert(notesTable)
       .values({
@@ -145,7 +146,12 @@ function RouteComponent() {
   });
   const { mutateAsync: createNoteAsync } = useMutation({
     mutationKey: ["createNote", userId],
-    mutationFn: () => createNoteFn({ data: { userId: userId || "" } }),
+    mutationFn: () =>
+      createNoteFn({ data: { userId: userId || "" } }).then((val) => {
+        if (!val) {
+          toast.error("Failed to create note");
+        }
+      }),
     onSuccess: () => refetch(),
   });
 

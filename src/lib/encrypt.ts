@@ -8,10 +8,13 @@ import { promisify } from "node:util";
 
 const pbkdf2Async = promisify(pbkdf2);
 
-export async function deriveMasterKey(
-  password: string,
-  salt: Buffer,
-): Promise<Buffer> {
+export async function deriveMasterKey({
+  password,
+  salt,
+}: {
+  password: string;
+  salt: Buffer;
+}): Promise<Buffer> {
   return pbkdf2Async(password, salt, 100000, 32, "sha256");
 }
 
@@ -19,22 +22,24 @@ function generateNoteKey(): Buffer {
   return randomBytes(32);
 }
 
-export function encryptNoteContent(
-  content: string,
-  noteKey: Buffer,
-): { encryptedContent: string; iv: string } {
+export function encryptNoteContent({
+  content,
+  noteKey,
+}: {
+  content: string;
+  noteKey: Buffer;
+}): { encryptedContent: string; iv: string } {
+  console.log("[start] encryptNoteContent");
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", noteKey, iv);
 
-  let encrypted = cipher.update(content, "utf8", "base64");
-  encrypted += cipher.final("base64");
+  let encrypted = cipher.update(content, "utf8");
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
 
   const authTag = cipher.getAuthTag();
 
-  const combined = Buffer.concat([
-    Buffer.from(encrypted, "base64"),
-    authTag,
-  ]).toString("base64");
+  const combined = Buffer.concat([encrypted, authTag]).toString("base64");
+  console.log("[end  ] encryptNoteContent");
 
   return {
     encryptedContent: combined,
@@ -42,11 +47,15 @@ export function encryptNoteContent(
   };
 }
 
-function decryptNoteContent(
-  encryptedContent: string,
-  iv: string,
-  noteKey: Buffer,
-): string {
+function decryptNoteContent({
+  encryptedContent,
+  iv,
+  noteKey,
+}: {
+  encryptedContent: string;
+  iv: string;
+  noteKey: Buffer;
+}): string {
   const combined = Buffer.from(encryptedContent, "base64");
 
   const authTag = Uint8Array.prototype.slice.call(combined, -16);
@@ -65,7 +74,13 @@ function decryptNoteContent(
   return decrypted;
 }
 
-function wrapNoteKey(noteKey: Buffer, masterKey: Buffer): string {
+function wrapNoteKey({
+  noteKey,
+  masterKey,
+}: {
+  noteKey: Buffer;
+  masterKey: Buffer;
+}): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", masterKey, iv);
 
@@ -77,7 +92,13 @@ function wrapNoteKey(noteKey: Buffer, masterKey: Buffer): string {
   return combined.toString("base64");
 }
 
-function unwrapNoteKey(wrappedKey: string, masterKey: Buffer): Buffer {
+function unwrapNoteKey({
+  wrappedKey,
+  masterKey,
+}: {
+  wrappedKey: string;
+  masterKey: Buffer;
+}): Buffer {
   const combined = Buffer.from(wrappedKey, "base64");
 
   const iv = Uint8Array.prototype.slice.call(combined, 0, 12);
@@ -93,13 +114,22 @@ function unwrapNoteKey(wrappedKey: string, masterKey: Buffer): Buffer {
   return decrypted;
 }
 
-export function createEncryptedNote(
-  content: string,
-  masterKey: Buffer,
-): { encryptedContent: string; encryptedKey: string; iv: string } {
+export function createEncryptedNote({
+  content,
+  masterKey,
+}: {
+  content: string;
+  masterKey: Buffer;
+}): { encryptedContent: string; encryptedKey: string; iv: string } {
+  console.log("[start] createEncryptedNote");
   const noteKey = generateNoteKey();
-  const { encryptedContent, iv } = encryptNoteContent(content, noteKey);
-  const encryptedKey = wrapNoteKey(noteKey, masterKey);
+  console.log("Notekey:", noteKey);
+  const { encryptedContent, iv } = encryptNoteContent({ content, noteKey });
+  console.log("Encrypted Note Content:");
+  console.log(encryptedContent);
+  console.log(iv);
+  const encryptedKey = wrapNoteKey({ noteKey, masterKey });
+  console.log("[end  ] createEncryptedNote");
 
   return {
     encryptedContent,
@@ -114,8 +144,8 @@ export function decryptNote(
   iv: string,
   masterKey: Buffer,
 ): string {
-  const noteKey = unwrapNoteKey(encryptedKey, masterKey);
-  return decryptNoteContent(encryptedContent, iv, noteKey);
+  const noteKey = unwrapNoteKey({ wrappedKey: encryptedKey, masterKey });
+  return decryptNoteContent({ encryptedContent, iv, noteKey });
 }
 
 export function generateSalt() {

@@ -68,10 +68,10 @@ const getNoteFn = createServerFn({ method: "GET" })
     // if (!user.subscribedTill || user.subscribedTill < new Date()) {
     //   throw new Error("User not subscribed");
     // }
-    const masterKey = await deriveMasterKey(
-      userId,
-      Buffer.from(user.salt, "hex"),
-    );
+    const masterKey = await deriveMasterKey({
+      password: userId,
+      salt: Buffer.from(user.salt, "hex"),
+    });
     const decrypted = decryptNote(
       note.encryptedContent,
       note.encryptionKey,
@@ -107,10 +107,10 @@ const updateNoteFn = createServerFn({ method: "POST" })
     if (!fetchedNote) {
       throw new Error("Note not found");
     }
-    const content = encryptNoteContent(
-      note.content,
-      Buffer.from(fetchedNote.encryptionKey, "hex"),
-    );
+    const content = encryptNoteContent({
+      content: note.content,
+      noteKey: Buffer.from(fetchedNote.encryptionKey, "hex"),
+    });
     const [updatedNote] = await db
       .update(notesTable)
       .set({
