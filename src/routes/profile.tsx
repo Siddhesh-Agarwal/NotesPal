@@ -1,3 +1,10 @@
+import { useUser } from "@clerk/clerk-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute } from "@tanstack/react-router";
+import { KeyRound, Trash2, UserPen } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
 import NotFoundPage from "@/components/page/not-found";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,13 +34,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { useUser } from "@clerk/clerk-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, Trash2, UserPen } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
 
 export const Route = createFileRoute("/profile")({
   component: RouteComponent,

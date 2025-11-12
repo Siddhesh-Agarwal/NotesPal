@@ -1,5 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { metadata } from "@/data/meta";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
@@ -18,6 +16,8 @@ import {
   Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { metadata } from "@/data/meta";
 
 export const Route = createFileRoute("/")({
   component: App,
@@ -53,12 +53,8 @@ function App() {
           width={200}
           height={200}
         />
-        <div className="absolute top-3 left-3 rotate-[-5deg]">
-          <StickyNote className="w-10 h-10 text-chart-1" />
-        </div>
-        <div className="absolute bottom-4 right-4 rotate-10">
-          <Pencil className="w-10 h-10 text-chart-2" />
-        </div>
+        <StickyNote className="absolute top-3 left-3 rotate-[-5deg] w-10 h-10 text-chart-1" />
+        <Pencil className="absolute bottom-4 right-4 rotate-10 w-10 h-10 text-chart-2" />
         <p className="text-2xl font-semibold font-serif text-card-foreground">
           Your ideas belong here
         </p>
