@@ -1,8 +1,8 @@
-import { db } from "@/db";
-import { userTable } from "@/db/schema";
 import { Webhooks } from "@polar-sh/tanstack-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { userTable } from "@/db/schema";
 
 const POLAR_WEBHOOK_SECRET = process.env.POLAR_WEBHOOK_SECRET;
 if (!POLAR_WEBHOOK_SECRET) {

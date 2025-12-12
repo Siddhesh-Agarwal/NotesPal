@@ -3,7 +3,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
-import { DollarSign, LogOutIcon, PlusIcon, UserIcon } from "lucide-react";
+import {
+  DollarSign,
+  LogOutIcon,
+  PlusIcon,
+  RefreshCcwIcon,
+  UserIcon,
+} from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import z from "zod";
@@ -11,6 +17,10 @@ import { NoteCard, TAPE_COLORS } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "@/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +32,14 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { db } from "@/db";
 import { notesTable, userTable } from "@/db/schema";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { queryClient } from "@/integrations/query";
+import { getAvatarUrl } from "@/lib/avatar";
 import {
   createEncryptedNote,
   decryptNote,
   deriveMasterKey,
 } from "@/lib/encrypt";
-import { useStore } from "@/store";
 
 export const Route = createFileRoute("/notes")({
   component: RouteComponent,
@@ -121,9 +133,6 @@ const deleteNoteFn = createServerFn({ method: "POST" })
   });
 
 function RouteComponent() {
-  // const { isLoaded, user } = useUser();
-  // const { userId, resetUser, firstName, lastName, email } = useStore();
-  const { resetUser } = useStore();
   const { userId } = useAuth();
   const { user, isSignedIn, isLoaded } = useUser();
   const navigate = useNavigate();
@@ -142,7 +151,7 @@ function RouteComponent() {
     mutationKey: ["deleteNote", userId],
     mutationFn: ({ id }: { id: string }) =>
       deleteNoteFn({ data: { userId: userId || "", noteId: id } }),
-    onSuccess: () => refetch(),
+    onSuccess: () => refetchNotes(),
   });
   const { mutateAsync: createNoteAsync } = useMutation({
     mutationKey: ["createNote", userId],
@@ -152,8 +161,18 @@ function RouteComponent() {
           toast.error("Failed to create note");
         }
       }),
-    onSuccess: () => refetch(),
+    onSuccess: () => refetchNotes(),
   });
+  const isMobile = useIsMobile();
+
+  async function refetchNotes() {
+    await queryClient.invalidateQueries({
+      queryKey: ["notes", userId],
+    });
+    await refetch();
+  }
+
+  const emailAddress = user?.primaryEmailAddress?.emailAddress;
 
   useEffect(() => {
     if (!isSignedIn && isLoaded) {
@@ -178,21 +197,36 @@ function RouteComponent() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800">My Notes</h1>
           <div className="flex gap-4">
-            <Button
-              onClick={async () => await createNoteAsync()}
-              className="bg-blue-600 hover:bg-blue-400 text-white"
-            >
-              <PlusIcon size={20} />
-              New Note
-            </Button>
+            <ButtonGroup>
+              <Button
+                size={isMobile ? "icon" : "default"}
+                variant="default"
+                onClick={async () => await refetchNotes()}
+                disabled={!emailAddress}
+              >
+                <RefreshCcwIcon />
+                <span className="hidden md:inline-flex">Refresh</span>
+              </Button>
+              <ButtonGroupSeparator />
+              <Button
+                size={isMobile ? "icon" : "default"}
+                variant="secondary"
+                onClick={async () => await createNoteAsync()}
+                disabled={!emailAddress}
+              >
+                <PlusIcon size={20} />
+                <span className="hidden md:inline-flex">New Note</span>
+              </Button>
+            </ButtonGroup>
             <DropdownMenu>
-              <DropdownMenuTrigger className="cursor-pointer">
+              <DropdownMenuTrigger
+                className="cursor-pointer"
+                disabled={!emailAddress}
+              >
                 <Avatar className="outline">
-                  <AvatarImage
-                    src={`https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${user?.primaryEmailAddress?.emailAddress}`}
-                  />
+                  <AvatarImage src={getAvatarUrl({ email: emailAddress })} />
                   <AvatarFallback>
-                    {`${user?.firstName || ""}${user?.lastName || ""}`.toUpperCase()}
+                    {`${user?.firstName?.charAt(0) ?? ""}${user?.lastName?.charAt(0) ?? ""}`.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
@@ -212,10 +246,7 @@ function RouteComponent() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="gap-2"
-                  onClick={async () => {
-                    resetUser();
-                    await signOut();
-                  }}
+                  onClick={async () => await signOut()}
                 >
                   <LogOutIcon />
                   Logout

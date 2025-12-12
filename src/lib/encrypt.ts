@@ -29,7 +29,6 @@ export function encryptNoteContent({
   content: string;
   noteKey: Buffer;
 }): { encryptedContent: string; iv: string } {
-  console.log("[start] encryptNoteContent");
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", noteKey, iv);
 
@@ -58,8 +57,8 @@ function decryptNoteContent({
 }): string {
   const combined = Buffer.from(encryptedContent, "base64");
 
-  const authTag = Uint8Array.prototype.slice.call(combined, -16);
-  const encrypted = Uint8Array.prototype.slice.call(combined, 0, -16);
+  const authTag = combined.subarray(-16);
+  const encrypted = combined.subarray(0, -16);
 
   const decipher = createDecipheriv(
     "aes-256-gcm",
@@ -101,9 +100,9 @@ function unwrapNoteKey({
 }): Buffer {
   const combined = Buffer.from(wrappedKey, "base64");
 
-  const iv = Uint8Array.prototype.slice.call(combined, 0, 12);
-  const authTag = Uint8Array.prototype.slice.call(combined, -16);
-  const encryptedKey = Uint8Array.prototype.slice.call(combined, 12, -16);
+  const iv = combined.subarray(0, 12);
+  const authTag = combined.subarray(-16);
+  const encryptedKey = combined.subarray(12, -16);
 
   const decipher = createDecipheriv("aes-256-gcm", masterKey, iv);
   decipher.setAuthTag(authTag);
@@ -121,16 +120,9 @@ export function createEncryptedNote({
   content: string;
   masterKey: Buffer;
 }): { encryptedContent: string; encryptedKey: string; iv: string } {
-  console.log("[start] createEncryptedNote");
   const noteKey = generateNoteKey();
-  console.log("Notekey:", noteKey);
   const { encryptedContent, iv } = encryptNoteContent({ content, noteKey });
-  console.log("Encrypted Note Content:");
-  console.log(encryptedContent);
-  console.log(iv);
   const encryptedKey = wrapNoteKey({ noteKey, masterKey });
-  console.log("[end  ] createEncryptedNote");
-
   return {
     encryptedContent,
     encryptedKey,

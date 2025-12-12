@@ -6,6 +6,7 @@ import {
   ArrowBigLeft,
   ArrowBigRight,
   ArrowBigUp,
+  ArrowRight,
   Cloud,
   Heart,
   Pencil,
@@ -61,10 +62,10 @@ function App() {
       </motion.div>
 
       {/* Buttons */}
-      <div className="mt-10">
+      <div className="mt-10 flex flex-row gap-4">
         <SignedOut>
           <Link to="/auth/sign-up">
-            <Button variant={"secondary"} className="gap-2" size={"lg"}>
+            <Button variant="default" className="gap-2" size="lg">
               <Pencil />
               Start Writing
             </Button>
@@ -72,12 +73,18 @@ function App() {
         </SignedOut>
         <SignedIn>
           <Link to="/notes">
-            <Button variant={"default"} className="gap-2" size={"lg"}>
+            <Button variant="default" className="gap-2" size="lg">
               <StickyNote />
               View Notes
             </Button>
           </Link>
         </SignedIn>
+        <Link to="/explore" target="_blank">
+          <Button variant="secondary" className="gap-2" size="lg">
+            Explore More
+            <ArrowRight />
+          </Button>
+        </Link>
       </div>
 
       {/* Random Doodle Arrows */}

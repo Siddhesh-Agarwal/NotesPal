@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -37,7 +37,6 @@ import {
   deriveMasterKey,
   encryptNoteContent,
 } from "@/lib/encrypt";
-import { useStore } from "@/store";
 import type { Note } from "@/types/note";
 
 export const Route = createFileRoute("/note/$noteId")({
@@ -128,7 +127,7 @@ const updateNoteFn = createServerFn({ method: "POST" })
 
 function RouteComponent() {
   const { noteId } = Route.useParams();
-  const { userId } = useStore();
+  const { userId } = useAuth();
   const {
     data,
     isLoading,

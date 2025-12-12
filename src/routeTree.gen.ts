@@ -13,6 +13,7 @@ import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-condi
 import { Route as SuccessRouteImport } from './routes/success'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NotesRouteImport } from './routes/notes'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
@@ -20,6 +21,7 @@ import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as ApiPortalRouteImport } from './routes/api/portal'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
 import { Route as ApiWebhooksPolarRouteImport } from './routes/api/webhooks/polar'
+import { Route as ApiWebhooksClerkRouteImport } from './routes/api/webhooks/clerk'
 
 const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
   id: '/terms-and-conditions',
@@ -39,6 +41,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const NotesRoute = NotesRouteImport.update({
   id: '/notes',
   path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -76,9 +83,15 @@ const ApiWebhooksPolarRoute = ApiWebhooksPolarRouteImport.update({
   path: '/api/webhooks/polar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksClerkRoute = ApiWebhooksClerkRouteImport.update({
+  id: '/api/webhooks/clerk',
+  path: '/api/webhooks/clerk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
@@ -88,10 +101,12 @@ export interface FileRoutesByFullPath {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
   '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
@@ -101,11 +116,13 @@ export interface FileRoutesByTo {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
   '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
   '/notes': typeof NotesRoute
   '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
@@ -115,12 +132,14 @@ export interface FileRoutesById {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
   '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/explore'
     | '/notes'
     | '/profile'
     | '/success'
@@ -130,10 +149,12 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
+    | '/api/webhooks/clerk'
     | '/api/webhooks/polar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/explore'
     | '/notes'
     | '/profile'
     | '/success'
@@ -143,10 +164,12 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
+    | '/api/webhooks/clerk'
     | '/api/webhooks/polar'
   id:
     | '__root__'
     | '/'
+    | '/explore'
     | '/notes'
     | '/profile'
     | '/success'
@@ -156,11 +179,13 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
+    | '/api/webhooks/clerk'
     | '/api/webhooks/polar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ExploreRoute: typeof ExploreRoute
   NotesRoute: typeof NotesRoute
   ProfileRoute: typeof ProfileRoute
   SuccessRoute: typeof SuccessRoute
@@ -170,6 +195,7 @@ export interface RootRouteChildren {
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   NoteNoteIdRoute: typeof NoteNoteIdRoute
+  ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute
   ApiWebhooksPolarRoute: typeof ApiWebhooksPolarRoute
 }
 
@@ -201,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: '/notes'
       fullPath: '/notes'
       preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -252,11 +285,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksPolarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/clerk': {
+      id: '/api/webhooks/clerk'
+      path: '/api/webhooks/clerk'
+      fullPath: '/api/webhooks/clerk'
+      preLoaderRoute: typeof ApiWebhooksClerkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ExploreRoute: ExploreRoute,
   NotesRoute: NotesRoute,
   ProfileRoute: ProfileRoute,
   SuccessRoute: SuccessRoute,
@@ -266,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   NoteNoteIdRoute: NoteNoteIdRoute,
+  ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
   ApiWebhooksPolarRoute: ApiWebhooksPolarRoute,
 }
 export const routeTree = rootRouteImport
