@@ -1,8 +1,8 @@
 import { marked } from "marked";
 import { cn } from "@/lib/utils";
 
-export function parseMarkdown(markdown: string): string {
-  return marked.parse(markdown) as string;
+export function parseMarkdown(markdown?: string): string {
+  return marked.parse(markdown ?? "") as string;
 }
 
 export default function MarkdownPreview({

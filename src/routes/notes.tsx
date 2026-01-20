@@ -1,19 +1,16 @@
-import { useAuth, useClerk, useUser } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { and, eq } from "drizzle-orm";
 import {
-  DollarSign,
+  DollarSignIcon,
   LogOutIcon,
+  NotepadTextIcon,
   PlusIcon,
   RefreshCcwIcon,
   UserIcon,
 } from "lucide-react";
-import { useEffect } from "react";
 import { toast } from "sonner";
-import z from "zod";
-import { NoteCard, TAPE_COLORS } from "@/components/note";
+import { NoteCard } from "@/components/note";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,166 +26,66 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
-import { db } from "@/db";
-import { notesTable, userTable } from "@/db/schema";
+import { createNoteFn, deleteNoteFn, getNotesFn } from "@/functions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { queryClient } from "@/integrations/query";
 import { getAvatarUrl } from "@/lib/avatar";
-import {
-  createEncryptedNote,
-  decryptNote,
-  deriveMasterKey,
-} from "@/lib/encrypt";
 
 export const Route = createFileRoute("/notes")({
   component: RouteComponent,
 });
 
-const getNotesFn = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ userId: z.string() }))
-  .handler(async (req) => {
-    const { userId } = req.data;
-    const notes = await db
-      .select()
-      .from(notesTable)
-      .innerJoin(userTable, eq(notesTable.userId, userTable.id))
-      .where(eq(userTable.id, userId));
-    const decryptedNotes = notes.map(async (note) => {
-      const { notes, users } = note;
-      const masterKey = await deriveMasterKey({
-        password: users.id,
-        salt: Buffer.from(users.salt, "hex"),
-      });
-      const { encryptedContent, encryptionKey, iv } = notes;
-      const decryptedContent = decryptNote(
-        encryptedContent,
-        encryptionKey,
-        iv,
-        masterKey,
-      );
-      return {
-        id: notes.id,
-        content: decryptedContent,
-        tapeColor: notes.tapeColor,
-        updatedAt: notes.updatedAt,
-        createdAt: notes.createdAt,
-      };
-    });
-    return Promise.all(decryptedNotes);
-  });
-
-const createNoteFn = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      userId: z.string().min(1),
-    }),
-  )
-  .handler(async (req) => {
-    const { userId } = req.data;
-    const [user] = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.id, userId));
-    if (!user) {
-      throw new Error("User not found");
-    }
-    const tapeColor =
-      TAPE_COLORS[Math.floor(Math.random() * TAPE_COLORS.length)].value;
-    const masterKey = await deriveMasterKey({
-      password: user.id,
-      salt: Buffer.from(user.salt, "hex"),
-    });
-    const encrypted = createEncryptedNote({ content: "", masterKey });
-    const [note] = await db
-      .insert(notesTable)
-      .values({
-        userId,
-        encryptedContent: encrypted.encryptedContent,
-        encryptionKey: encrypted.encryptedKey,
-        iv: encrypted.iv,
-        tapeColor,
-      })
-      .returning();
-    return note !== undefined;
-  });
-
-const deleteNoteFn = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      userId: z.string(),
-      noteId: z.string(),
-    }),
-  )
-  .handler(async (request) => {
-    const { userId, noteId } = request.data;
-    const [deletedNote] = await db
-      .delete(notesTable)
-      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)))
-      .returning();
-    if (!deletedNote) {
-      throw new Error("Note not found");
-    }
-    return deletedNote;
-  });
-
 function RouteComponent() {
-  const { userId } = useAuth();
-  const { user, isSignedIn, isLoaded } = useUser();
+  const { signOut, isSignedIn, user } = useClerk();
+  const emailAddress = user?.primaryEmailAddress?.emailAddress;
   const navigate = useNavigate();
-  const { signOut } = useClerk();
+  const isMobile = useIsMobile();
   const {
     data: notes,
-    isLoading,
-    refetch,
-    error,
+    status: notesStatus,
+    refetch: notesRefetch,
+    error: notesError,
   } = useQuery({
-    queryKey: ["notes", userId],
-    queryFn: () => getNotesFn({ data: { userId: userId || "" } }),
-    enabled: !!userId,
+    queryKey: ["notes", user?.id],
+    queryFn: () => getNotesFn({ data: { userId: user?.id ?? "" } }),
+    enabled: !!user?.id,
   });
   const { mutateAsync: deleteNoteAsync } = useMutation({
-    mutationKey: ["deleteNote", userId],
+    mutationKey: ["deleteNote", user?.id],
     mutationFn: ({ id }: { id: string }) =>
-      deleteNoteFn({ data: { userId: userId || "", noteId: id } }),
+      deleteNoteFn({ data: { userId: user?.id ?? "", noteId: id } }),
     onSuccess: () => refetchNotes(),
   });
-  const { mutateAsync: createNoteAsync } = useMutation({
-    mutationKey: ["createNote", userId],
-    mutationFn: () =>
-      createNoteFn({ data: { userId: userId || "" } }).then((val) => {
-        if (!val) {
-          toast.error("Failed to create note");
-        }
-      }),
-    onSuccess: () => refetchNotes(),
-  });
-  const isMobile = useIsMobile();
+  const { mutateAsync: createNoteAsync, status: createNoteStatus } =
+    useMutation({
+      mutationKey: ["createNote", user?.id],
+      mutationFn: () =>
+        createNoteFn({ data: { userId: user?.id ?? "" } }).then((val) => {
+          if (!val) {
+            toast.error("Failed to create note");
+          }
+        }),
+      onSuccess: () => refetchNotes(),
+    });
 
   async function refetchNotes() {
     await queryClient.invalidateQueries({
-      queryKey: ["notes", userId],
+      queryKey: ["notes", user?.id],
     });
-    await refetch();
+    await notesRefetch();
   }
 
-  const emailAddress = user?.primaryEmailAddress?.emailAddress;
-
-  useEffect(() => {
-    if (!isSignedIn && isLoaded) {
-      navigate({ to: "/auth/sign-in" });
-    }
-  }, [isSignedIn, isLoaded, navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="bg-background flex justify-center items-center h-screen">
-        <div className="flex flex-col gap-2 text-foreground items-center">
-          <Spinner />
-          <span className="text-xl">Loading...</span>
-        </div>
-      </div>
-    );
+  if (!isSignedIn) {
+    navigate({ to: "/auth/sign-in" });
   }
 
   return (
@@ -200,7 +97,7 @@ function RouteComponent() {
             <ButtonGroup>
               <Button
                 size={isMobile ? "icon" : "default"}
-                variant="default"
+                variant="outline"
                 onClick={async () => await refetchNotes()}
                 disabled={!emailAddress}
               >
@@ -210,9 +107,9 @@ function RouteComponent() {
               <ButtonGroupSeparator />
               <Button
                 size={isMobile ? "icon" : "default"}
-                variant="secondary"
+                variant="outline"
                 onClick={async () => await createNoteAsync()}
-                disabled={!emailAddress}
+                disabled={!emailAddress || createNoteStatus === "pending"}
               >
                 <PlusIcon size={20} />
                 <span className="hidden md:inline-flex">New Note</span>
@@ -234,7 +131,7 @@ function RouteComponent() {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2" onClick={() => {}}>
-                  <DollarSign />
+                  <DollarSignIcon />
                   Manage Subscription
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -255,30 +152,51 @@ function RouteComponent() {
             </DropdownMenu>
           </div>
         </div>
-        {error || notes === undefined ? (
+        {notesStatus === "pending" ? (
+          <div className="bg-background flex justify-center items-center h-full">
+            <div className="flex gap-2 text-foreground items-center">
+              <Spinner />
+              <span className="text-xl">Loading...</span>
+            </div>
+          </div>
+        ) : notesStatus === "error" ? (
           <Alert variant={"destructive"}>
             <AlertTitle className="text-2xl">Cannot load notes</AlertTitle>
             <AlertDescription className="text-base">
-              {error?.message ||
-                "Something went wrong while loading your notes."}
+              {notesError.message}
             </AlertDescription>
           </Alert>
         ) : notes.length === 0 ? (
-          <Alert variant={"destructive"}>
-            <AlertTitle className="text-2xl">No notes yet</AlertTitle>
-            <AlertDescription className="text-base">
-              Create your first note to get started.
-            </AlertDescription>
-          </Alert>
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <NotepadTextIcon />
+              </EmptyMedia>
+              <EmptyTitle>No notes yet</EmptyTitle>
+              <EmptyDescription className="text-base">
+                Create your first note to get started.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button
+                variant="secondary"
+                onClick={async () => await createNoteAsync()}
+                disabled={!emailAddress || createNoteStatus === "pending"}
+              >
+                <PlusIcon />
+                Create a note
+              </Button>
+            </EmptyContent>
+          </Empty>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
             {notes.map((note) => (
               <Link
                 to="/note/$noteId"
+                key={note.id}
                 params={{
                   noteId: note.id,
                 }}
-                key={note.id}
               >
                 <NoteCard
                   key={note.id}

@@ -1,16 +1,28 @@
-import { Checkout } from "@polar-sh/tanstack-start";
+// src/routes/api/checkout.ts
+
+import { Checkout } from "@dodopayments/tanstack";
 import { createFileRoute } from "@tanstack/react-router";
-import { env } from "node:process";
+import { dodoPaymentsEnv } from "@/integrations/dodopayments";
 
 export const Route = createFileRoute("/api/checkout")({
   server: {
     handlers: {
-      GET: Checkout({
-        accessToken: env.POLAR_ACCESS_TOKEN,
-        successUrl: "/success",
-        returnUrl: "/notes",
-        server: "sandbox",
-      }),
+      GET: async ({ request }) => {
+        return Checkout({
+          bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+          returnUrl: process.env.DODO_PAYMENTS_RETURN_URL,
+          environment: dodoPaymentsEnv,
+          type: "static",
+        })(request);
+      },
+      POST: async ({ request }) => {
+        return Checkout({
+          bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+          returnUrl: process.env.DODO_PAYMENTS_RETURN_URL,
+          environment: dodoPaymentsEnv,
+          type: "session",
+        })(request);
+      },
     },
   },
 });

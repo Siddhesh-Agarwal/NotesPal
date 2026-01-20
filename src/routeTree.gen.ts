@@ -18,10 +18,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
-import { Route as ApiPortalRouteImport } from './routes/api/portal'
+import { Route as ApiCustomerPortalRouteImport } from './routes/api/customer-portal'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
-import { Route as ApiWebhooksPolarRouteImport } from './routes/api/webhooks/polar'
-import { Route as ApiWebhooksClerkRouteImport } from './routes/api/webhooks/clerk'
 
 const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
   id: '/terms-and-conditions',
@@ -68,24 +66,14 @@ const AuthSignInRoute = AuthSignInRouteImport.update({
   path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPortalRoute = ApiPortalRouteImport.update({
-  id: '/api/portal',
-  path: '/api/portal',
+const ApiCustomerPortalRoute = ApiCustomerPortalRouteImport.update({
+  id: '/api/customer-portal',
+  path: '/api/customer-portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
   id: '/api/checkout',
   path: '/api/checkout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWebhooksPolarRoute = ApiWebhooksPolarRouteImport.update({
-  id: '/api/webhooks/polar',
-  path: '/api/webhooks/polar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWebhooksClerkRoute = ApiWebhooksClerkRouteImport.update({
-  id: '/api/webhooks/clerk',
-  path: '/api/webhooks/clerk',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -97,12 +85,10 @@ export interface FileRoutesByFullPath {
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
-  '/api/portal': typeof ApiPortalRoute
+  '/api/customer-portal': typeof ApiCustomerPortalRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
-  '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -112,12 +98,10 @@ export interface FileRoutesByTo {
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
-  '/api/portal': typeof ApiPortalRoute
+  '/api/customer-portal': typeof ApiCustomerPortalRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
-  '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -128,12 +112,10 @@ export interface FileRoutesById {
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
-  '/api/portal': typeof ApiPortalRoute
+  '/api/customer-portal': typeof ApiCustomerPortalRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
-  '/api/webhooks/polar': typeof ApiWebhooksPolarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -145,12 +127,10 @@ export interface FileRouteTypes {
     | '/success'
     | '/terms-and-conditions'
     | '/api/checkout'
-    | '/api/portal'
+    | '/api/customer-portal'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
-    | '/api/webhooks/clerk'
-    | '/api/webhooks/polar'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -160,12 +140,10 @@ export interface FileRouteTypes {
     | '/success'
     | '/terms-and-conditions'
     | '/api/checkout'
-    | '/api/portal'
+    | '/api/customer-portal'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
-    | '/api/webhooks/clerk'
-    | '/api/webhooks/polar'
   id:
     | '__root__'
     | '/'
@@ -175,12 +153,10 @@ export interface FileRouteTypes {
     | '/success'
     | '/terms-and-conditions'
     | '/api/checkout'
-    | '/api/portal'
+    | '/api/customer-portal'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
-    | '/api/webhooks/clerk'
-    | '/api/webhooks/polar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -191,12 +167,10 @@ export interface RootRouteChildren {
   SuccessRoute: typeof SuccessRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
-  ApiPortalRoute: typeof ApiPortalRoute
+  ApiCustomerPortalRoute: typeof ApiCustomerPortalRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   NoteNoteIdRoute: typeof NoteNoteIdRoute
-  ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute
-  ApiWebhooksPolarRoute: typeof ApiWebhooksPolarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -264,11 +238,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/portal': {
-      id: '/api/portal'
-      path: '/api/portal'
-      fullPath: '/api/portal'
-      preLoaderRoute: typeof ApiPortalRouteImport
+    '/api/customer-portal': {
+      id: '/api/customer-portal'
+      path: '/api/customer-portal'
+      fullPath: '/api/customer-portal'
+      preLoaderRoute: typeof ApiCustomerPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/checkout': {
@@ -276,20 +250,6 @@ declare module '@tanstack/react-router' {
       path: '/api/checkout'
       fullPath: '/api/checkout'
       preLoaderRoute: typeof ApiCheckoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/webhooks/polar': {
-      id: '/api/webhooks/polar'
-      path: '/api/webhooks/polar'
-      fullPath: '/api/webhooks/polar'
-      preLoaderRoute: typeof ApiWebhooksPolarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/webhooks/clerk': {
-      id: '/api/webhooks/clerk'
-      path: '/api/webhooks/clerk'
-      fullPath: '/api/webhooks/clerk'
-      preLoaderRoute: typeof ApiWebhooksClerkRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -303,12 +263,10 @@ const rootRouteChildren: RootRouteChildren = {
   SuccessRoute: SuccessRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
-  ApiPortalRoute: ApiPortalRoute,
+  ApiCustomerPortalRoute: ApiCustomerPortalRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   NoteNoteIdRoute: NoteNoteIdRoute,
-  ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
-  ApiWebhooksPolarRoute: ApiWebhooksPolarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

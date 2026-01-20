@@ -17,7 +17,7 @@ export const Route = createFileRoute("/success")({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): Props => {
     return {
-      checkout_id: search.checkout_id?.toString() || undefined,
+      checkout_id: search.checkout_id?.toString(),
     };
   },
 });

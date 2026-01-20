@@ -131,7 +131,3 @@
     --tracking-normal: 0.5px;
     --spacing: 0.25rem;
 }
-
-body {
-    letter-spacing: var(--tracking-normal);
-}

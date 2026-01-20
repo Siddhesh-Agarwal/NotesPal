@@ -59,7 +59,7 @@ function RouteComponent() {
         <p>
           NotesPal operates on a subscription model priced at{" "}
           <strong>$5 per year</strong>. All payments are securely processed
-          through <strong>Polar.sh</strong>. Subscriptions automatically renew
+          through <strong>Dodopayments</strong>. Subscriptions automatically renew
           unless canceled before the renewal date.
         </p>
         <p>
@@ -91,7 +91,7 @@ function RouteComponent() {
           To allow global access to your notes, NotesPal synchronizes your
           encrypted data across our servers. We do <strong>not</strong> sell,
           rent, or share your personal information or note contents with third
-          parties beyond the necessary integration with Clerk, Polar.sh, and
+          parties beyond the necessary integration with Clerk, Dodopayments, and
           Cloudflare.
         </p>
         <p>
@@ -134,7 +134,7 @@ function RouteComponent() {
           <strong>“as available”</strong> basis. We do not guarantee
           uninterrupted access, error-free performance, or absolute security of
           stored data. While we employ strong encryption and reputable
-          third-party providers (Clerk, Polar.sh, Cloudflare), no system is
+          third-party providers (Clerk, Dodopayments, Cloudflare), no system is
           completely immune to vulnerabilities.
         </p>
         <p>Use the Service at your own risk.</p>

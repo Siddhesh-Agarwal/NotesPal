@@ -1,8 +1,6 @@
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { and, eq } from "drizzle-orm";
 import {
   AlertCircleIcon,
   ArrowLeftIcon,
@@ -12,7 +10,6 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import z from "zod";
 import MarkdownPreview from "@/components/markdown-preview";
 import { TAPE_COLORS } from "@/components/note";
 import NotFoundPage from "@/components/page/not-found";
@@ -29,112 +26,24 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { db } from "@/db";
-import { notesTable, userTable } from "@/db/schema";
+import { getNoteFn, updateNoteFn } from "@/functions";
 import { queryClient } from "@/integrations/query";
-import {
-  decryptNote,
-  deriveMasterKey,
-  encryptNoteContent,
-} from "@/lib/encrypt";
 import type { Note } from "@/types/note";
 
 export const Route = createFileRoute("/note/$noteId")({
   component: RouteComponent,
 });
 
-const getNoteFn = createServerFn({ method: "GET" })
-  .inputValidator(
-    z.object({
-      noteId: z.string(),
-      userId: z.string(),
-    }),
-  )
-  .handler(async (req) => {
-    const { userId, noteId } = req.data;
-    const [result] = await db
-      .select({
-        note: notesTable,
-        user: userTable,
-      })
-      .from(notesTable)
-      .innerJoin(userTable, eq(notesTable.userId, userTable.id))
-      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)));
-    if (!result) {
-      throw new Error("Note or user not found");
-    }
-    const { note, user } = result;
-    // if (!user.subscribedTill || user.subscribedTill < new Date()) {
-    //   throw new Error("User not subscribed");
-    // }
-    const masterKey = await deriveMasterKey({
-      password: userId,
-      salt: Buffer.from(user.salt, "hex"),
-    });
-    const decrypted = decryptNote(
-      note.encryptedContent,
-      note.encryptionKey,
-      note.iv,
-      masterKey,
-    );
-    return {
-      id: note.id,
-      content: decrypted,
-      tapeColor: note.tapeColor,
-      updatedAt: note.updatedAt,
-      createdAt: note.createdAt,
-    };
-  });
-
-const updateNoteFn = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      noteId: z.string(),
-      userId: z.string(),
-      note: z.object({
-        content: z.string(),
-        tapeColor: z.string(),
-      }),
-    }),
-  )
-  .handler(async (req) => {
-    const { userId, noteId, note } = req.data;
-    const [fetchedNote] = await db
-      .select({ encryptionKey: notesTable.encryptionKey })
-      .from(notesTable)
-      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)));
-    if (!fetchedNote) {
-      throw new Error("Note not found");
-    }
-    const content = encryptNoteContent({
-      content: note.content,
-      noteKey: Buffer.from(fetchedNote.encryptionKey, "hex"),
-    });
-    const [updatedNote] = await db
-      .update(notesTable)
-      .set({
-        encryptedContent: content.encryptedContent,
-        iv: content.iv,
-        tapeColor: note.tapeColor,
-      })
-      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)))
-      .returning();
-    if (!updatedNote) {
-      throw new Error("Note update failed");
-    }
-    return updatedNote;
-  });
-
 function RouteComponent() {
   const { noteId } = Route.useParams();
   const { userId } = useAuth();
   const {
     data,
-    isLoading,
-    error: fetchError,
+    status: noteStatus,
+    error: noteError,
   } = useQuery({
     queryKey: ["note", noteId],
-    queryFn: () => getNoteFn({ data: { userId: userId || "", noteId } }),
+    queryFn: () => getNoteFn({ data: { userId: userId ?? "", noteId } }),
     enabled: !!noteId && !!userId,
   });
   const {
@@ -143,7 +52,7 @@ function RouteComponent() {
     error: saveError,
   } = useMutation({
     mutationFn: (note: { content: string; tapeColor: string }) =>
-      updateNoteFn({ data: { noteId, userId: userId || "", note } }),
+      updateNoteFn({ data: { noteId, userId: userId ?? "", note } }),
     onSuccess: () => {
       pendingUpdateRef.current = null;
       queryClient.invalidateQueries({ queryKey: ["note", noteId] }).then(() => {
@@ -159,12 +68,6 @@ function RouteComponent() {
     null,
   );
   const { isSignedIn, isLoaded } = useUser();
-
-  useEffect(() => {
-    if (!isSignedIn && isLoaded) {
-      navigate({ to: "/auth/sign-in" });
-    }
-  }, [isSignedIn, isLoaded, navigate]);
 
   // Initialize note from query data
   useEffect(() => {
@@ -227,7 +130,7 @@ function RouteComponent() {
     setNote((prev) => (prev ? { ...prev, tapeColor: color } : null));
   }, []);
 
-  if (isLoading) {
+  if (noteStatus === "pending" || !isLoaded) {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
         <div className="flex flex-col gap-2 text-foreground items-center">
@@ -238,12 +141,30 @@ function RouteComponent() {
     );
   }
 
+  if (!isSignedIn) {
+    navigate({ to: "/auth/sign-in" });
+  }
+
   if (!userId) {
     return <NotFoundPage backTo="/" />;
   }
 
-  if (fetchError || !note) {
+  if (note === null) {
     return <NotFoundPage backTo="/notes" />;
+  }
+
+  if (noteStatus === "error") {
+    return (
+      <div className="bg-background flex justify-center items-center h-screen">
+        <div className="flex flex-col gap-2 text-foreground items-center">
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircleIcon className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{noteError.message}</AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -254,7 +175,7 @@ function RouteComponent() {
             <AlertCircleIcon className="h-4 w-4" />
             <AlertTitle>Save Failed</AlertTitle>
             <AlertDescription>
-              {saveError.message ||
+              {saveError.message ??
                 "Failed to save your note. Your changes may be lost."}
             </AlertDescription>
           </Alert>

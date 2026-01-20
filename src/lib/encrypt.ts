@@ -38,7 +38,6 @@ export function encryptNoteContent({
   const authTag = cipher.getAuthTag();
 
   const combined = Buffer.concat([encrypted, authTag]).toString("base64");
-  console.log("[end  ] encryptNoteContent");
 
   return {
     encryptedContent: combined,
@@ -141,5 +140,5 @@ export function decryptNote(
 }
 
 export function generateSalt() {
-  return randomBytes(16).toString("hex");
+  return randomBytes(16);
 }

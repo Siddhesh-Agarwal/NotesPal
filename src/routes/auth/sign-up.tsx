@@ -1,3 +1,11 @@
+import { useSignUp } from "@clerk/clerk-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { LogInIcon, MoveLeft } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import type { z } from "zod/v4";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,73 +32,15 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { metadata } from "@/data/meta";
-import { db } from "@/db";
-import { userTable } from "@/db/schema";
-import { polar } from "@/integrations/polar";
-import { generateSalt } from "@/lib/encrypt";
-import { useStore } from "@/store";
-import { useSignUp } from "@clerk/clerk-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { LogInIcon, MoveLeft } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
+import { createUserFn } from "@/functions";
+import { otpFormSchema, signupFormSchema } from "@/schema";
 
 export const Route = createFileRoute("/auth/sign-up")({
   component: RouteComponent,
 });
 
-const signupFormSchema = z.object({
-  firstName: z.string().min(2).max(100),
-  lastName: z.string().min(2).max(100),
-  email: z.email({ message: "Invalid email address" }),
-  password: z.string().min(1),
-  confirmPassword: z.string().min(1),
-  termsAccepted: z.boolean().refine((value) => value, {
-    message: "You must accept the terms and conditions",
-  }),
-});
-
-const otpFormSchema = z.object({
-  otp: z
-    .string()
-    .min(6, { message: "OTP must be 6 digits" })
-    .max(6, { message: "OTP must be 6 digits" }),
-});
-
 type SignupFormSchema = z.infer<typeof signupFormSchema>;
 type OtpFormSchema = z.infer<typeof otpFormSchema>;
-
-const createUserInfo = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      userId: z.string().min(1),
-      data: signupFormSchema,
-    }),
-  )
-  .handler(async (request) => {
-    const { data, userId } = request.data;
-    const { id: customerId } = await polar.customers.create({
-      externalId: userId,
-      email: data.email,
-      name: `${data.firstName} ${data.lastName}`,
-    });
-    const [user] = await db
-      .insert(userTable)
-      .values({
-        id: userId,
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        customerId: customerId,
-        salt: generateSalt(),
-      })
-      .returning();
-    return user;
-  });
 
 function RouteComponent() {
   const signupForm = useForm<SignupFormSchema>({
@@ -99,42 +49,8 @@ function RouteComponent() {
   const otpForm = useForm<OtpFormSchema>({
     resolver: zodResolver(otpFormSchema),
   });
-  const navigate = useNavigate();
   const { isLoaded, signUp, setActive } = useSignUp();
-  const { userId, setUser } = useStore();
   const [verifying, setVerifying] = useState(false);
-
-  async function completeSignUp(userId: string) {
-    if (!signUp) return;
-
-    try {
-      await setActive({ session: signUp.createdSessionId });
-      const user = await createUserInfo({
-        data: { userId, data: signupForm.getValues() },
-      });
-      setUser({
-        userId: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        customerId: user.customerId,
-      });
-
-      const params = new URLSearchParams();
-      params.append("products", "80b1520f-73f6-4f47-8110-cd16041497d9");
-      params.append("customerId", user.customerId);
-      params.append("customerExternalId", user.id);
-      params.append("customerName", `${user.firstName} ${user.lastName}`);
-      params.append("customerEmail", user.email);
-
-      const response = await fetch(`/api/portal?${params.toString()}`);
-      console.log(response);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Error creating user";
-      toast.error("Error", { description: message });
-    }
-  }
 
   async function onSubmitSignUpForm(data: SignupFormSchema) {
     if (data.password !== data.confirmPassword) {
@@ -157,12 +73,17 @@ function RouteComponent() {
       });
 
       if (signUpResult.status === "complete") {
-        if (!signUpResult.id) {
+        if (!signUpResult.createdUserId) {
           toast.error("User ID not found");
           return;
         }
-
-        await completeSignUp(signUpResult.id);
+        await createUserFn({
+          data: {
+            userId: signUpResult.createdUserId,
+            data,
+          },
+        });
+        await setActive({ session: signUp.createdSessionId });
       } else {
         await signUpResult.prepareEmailAddressVerification({
           strategy: "email_code",
@@ -191,7 +112,7 @@ function RouteComponent() {
           toast.error("User ID not found");
           return;
         }
-        await completeSignUp(result.createdUserId);
+        await setActive({ session: signUp.createdSessionId });
       } else {
         toast.error("Verification failed", {
           description: "Invalid code. Please try again.",
@@ -216,12 +137,6 @@ function RouteComponent() {
       toast.error("Failed to resend code");
     }
   }
-
-  useEffect(() => {
-    if (userId !== null) {
-      navigate({ to: "/notes", ignoreBlocker: true });
-    }
-  }, [userId, navigate]);
 
   return (
     <div className="bg-background h-screen grid place-items-center">

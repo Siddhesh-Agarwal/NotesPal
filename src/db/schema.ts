@@ -20,9 +20,7 @@ export const notesTable = sqliteTable("notes", {
   userId: text("user_id", { length: 50 })
     .notNull()
     .references(() => userTable.id),
-  encryptedContent: text("encrypted_content").notNull(),
-  encryptionKey: text("encryption_key", { length: 64 }).notNull(),
-  iv: text("iv", { length: 24 }).notNull(),
+  content: text("content").notNull(),
   tapeColor: text("tape_color", { length: 7 }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

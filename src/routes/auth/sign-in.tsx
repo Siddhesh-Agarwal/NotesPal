@@ -1,3 +1,10 @@
+import { useSignIn, useUser } from "@clerk/clerk-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { LogInIcon, MoveLeft } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import type { z } from "zod/v4";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,69 +21,26 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { db } from "@/db";
-import { userTable } from "@/db/schema";
-import { useStore } from "@/store";
-import { useSignIn, useUser } from "@clerk/clerk-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
-import { LogInIcon, MoveLeft } from "lucide-react";
-import { useEffect, useEffectEvent } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import z from "zod";
+import { Spinner } from "@/components/ui/spinner";
+import { signInSchema } from "@/schema";
 
 export const Route = createFileRoute("/auth/sign-in")({
   component: RouteComponent,
 });
 
-const formSchema = z.object({
-  email: z.email(),
-  password: z.string().min(1),
-});
-
-type FormSchema = z.infer<typeof formSchema>;
-
-const getUser = createServerFn({ method: "GET" })
-  .inputValidator(
-    z.object({
-      email: z.email(),
-    }),
-  )
-  .handler(async (request) => {
-    const { email } = request.data;
-    const [user] = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, email));
-    return user;
-  });
+type FormSchema = z.infer<typeof signInSchema>;
 
 function RouteComponent() {
   const form = useForm<FormSchema>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(signInSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
   const { signIn, isLoaded, setActive } = useSignIn();
-  const { user, isSignedIn, isLoaded: isUserLoaded } = useUser();
-  const store = useStore();
+  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
   const navigate = useNavigate();
-
-  const setUser = useEffectEvent(async (email: string) => {
-    const user = await getUser({ data: { email } });
-    store.setUser({
-      userId: user.id,
-      customerId: user.customerId,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    });
-  });
 
   async function onSubmit(values: FormSchema) {
     if (!isLoaded) {
@@ -89,21 +53,33 @@ function RouteComponent() {
       identifier: values.email,
     });
     if (result.status === "complete") {
-      await setUser(values.email);
       await setActive({
         redirectUrl: "/notes",
         session: result.createdSessionId,
       });
+    } else if (result.status === "needs_second_factor") {
+      signIn.prepareSecondFactor({
+        redirectUrl: "/notes",
+        strategy: "email_link",
+        emailAddressId: values.email,
+      });
     }
   }
 
-  useEffect(() => {
-    if (isUserLoaded && isSignedIn && user.primaryEmailAddress) {
-      setUser(user.primaryEmailAddress.emailAddress).then(() => {
-        navigate({ to: "/notes" });
-      });
-    }
-  }, [isUserLoaded, isSignedIn, navigate, setUser, user?.primaryEmailAddress]);
+  if (!isUserLoaded) {
+    return (
+      <div className="bg-background h-screen grid place-items-center">
+        <div className="text-center">
+          <Spinner />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSignedIn) {
+    navigate({ to: "/notes" });
+  }
 
   return (
     <div className="bg-background h-screen grid place-items-center">

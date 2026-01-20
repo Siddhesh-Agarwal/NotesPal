@@ -4,7 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { KeyRound, MoveLeft, Trash2, UserPen } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import z from "zod";
+import type z from "zod";
 import NotFoundPage from "@/components/page/not-found";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -36,21 +36,10 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { getAvatarUrl } from "@/lib/avatar";
+import { passwordFormSchema, profileFormSchema } from "@/schema";
 
 export const Route = createFileRoute("/profile")({
   component: RouteComponent,
-});
-
-const profileFormSchema = z.object({
-  firstName: z.string().min(2).max(100),
-  lastName: z.string().min(2).max(100),
-  email: z.email(),
-});
-
-const passwordFormSchema = z.object({
-  currentPassword: z.string().min(1),
-  newPassword: z.string().min(1),
-  confirmNewPassword: z.string().min(1),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
@@ -58,12 +47,13 @@ type PasswordFormData = z.infer<typeof passwordFormSchema>;
 
 function RouteComponent() {
   const { user, isLoaded } = useUser();
+  const emailAddress = user?.primaryEmailAddress?.emailAddress;
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      email: user?.primaryEmailAddress?.emailAddress || "",
+      firstName: user?.firstName ?? "",
+      lastName: user?.lastName ?? "",
+      email: emailAddress ?? "",
     },
   });
 
@@ -153,19 +143,20 @@ function RouteComponent() {
           <CardContent>
             <section className="flex flex-col gap-4">
               <div className="flex">
-                <Avatar className="outline size-24 mx-auto ">
+                <Avatar className="outline size-24 mx-auto">
                   <AvatarImage
                     src={getAvatarUrl({
-                      email: user?.primaryEmailAddress?.emailAddress,
+                      email: emailAddress,
                     })}
                   />
                   <AvatarFallback>
                     {`${user?.firstName?.charAt(0) ?? ""}${user?.lastName?.charAt(0) ?? ""}`.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-sans text-lg mb-2">{user.fullName}</span>
-                  <span className="font-mono">{user.id}</span>
+                <div className="flex flex-col gap-2">
+                  <span className="font-sans text-xl">{user.fullName}</span>
+                  <span className="font-sans text-sm">{emailAddress}</span>
+                  <span className="font-mono text-sm">{user.id}</span>
                 </div>
               </div>
               <Form {...profileForm}>
