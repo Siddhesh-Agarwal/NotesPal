@@ -11,13 +11,24 @@ import {
   getUserStatement,
 } from "@/db/statements";
 import { DodoPaymentsClient } from "@/integrations/dodopayments";
-import { generateSalt } from "@/lib/encrypt";
-import {
-  noteSchema,
-  signupFormSchema,
-  userAndNoteSchema,
-  userIdSchema,
-} from "@/schema";
+import { noteSchema, userAndNoteSchema, userIdSchema } from "@/schema";
+
+function checkUserSubscription(
+  user: NonNullable<Awaited<ReturnType<typeof getUserStatement.get>>>,
+) {
+  if (user.subscribedTill === null) {
+    const thirtyDaysLater = new Date(
+      user.createdAt.valueOf() + 30 * 24 * 60 * 60 * 1000,
+    );
+    if (user.createdAt <= thirtyDaysLater) {
+      return;
+    }
+    throw new Error("Failed to set subscription date");
+  }
+  if (user.subscribedTill < new Date()) {
+    throw new Error("User not subscribed");
+  }
+}
 
 export const getNotesFn = createServerFn({ method: "GET" })
   .inputValidator(userIdSchema)
@@ -35,6 +46,7 @@ export const createNoteFn = createServerFn({ method: "POST" })
     if (user === undefined) {
       throw new Error("User not found");
     }
+    checkUserSubscription(user);
     const tapeColor =
       TAPE_COLORS[Math.floor(Math.random() * TAPE_COLORS.length)].value;
     const [note] = await db
@@ -56,9 +68,7 @@ export const getNoteFn = createServerFn({ method: "GET" })
     if (result === undefined) {
       throw new Error("Note or user not found");
     }
-    // if (!result.user.subscribedTill || result.user.subscribedTill < new Date()) {
-    //   throw new Error("User not subscribed");
-    // }
+    checkUserSubscription(result.user);
     return result.note;
   });
 
@@ -75,6 +85,7 @@ export const updateNoteFn = createServerFn({ method: "POST" })
     if (!fetchedNote) {
       throw new Error("Note not found");
     }
+    checkUserSubscription(fetchedNote.user);
     const [updatedNote] = await db
       .update(notesTable)
       .set({
@@ -100,29 +111,55 @@ export const deleteNoteFn = createServerFn({ method: "POST" })
     return deletedNote;
   });
 
-export const createUserFn = createServerFn({ method: "POST" })
+export const getUserFn = createServerFn({ method: "GET" })
+  .inputValidator(userIdSchema)
+  .handler(async (request) => {
+    const user = await getUserStatement.get({ userId: request.data.userId });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  });
+
+export const getCustomerPortalFn = createServerFn({ method: "GET" })
   .inputValidator(
     z.object({
-      ...userIdSchema.shape,
-      data: signupFormSchema,
+      customerId: z.string(),
     }),
   )
   .handler(async (request) => {
-    const { data, userId } = request.data;
-    const customer = await DodoPaymentsClient.customers.create({
-      email: data.email,
-      name: `${data.firstName} ${data.lastName}`,
-    });
+    const { customerId } = request.data;
+    const res =
+      await DodoPaymentsClient.customers.customerPortal.create(customerId);
+    return res;
+  });
+
+export const getCheckoutSessionFn = createServerFn({ method: "GET" })
+  .inputValidator(
+    z.object({
+      customerId: z.string(),
+    }),
+  )
+  .handler(async (request) => {
+    const { customerId } = request.data;
     const [user] = await db
-      .insert(userTable)
-      .values({
-        id: userId,
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        customerId: customer.customer_id,
-        salt: generateSalt().toString("hex"),
-      })
-      .returning();
-    return user;
+      .select()
+      .from(userTable)
+      .where(eq(userTable.customerId, customerId));
+    if (user === undefined) {
+      throw new Error("User not found");
+    }
+    const res = await DodoPaymentsClient.checkoutSessions.create({
+      customer: {
+        customer_id: customerId,
+        email: user.email,
+      },
+      product_cart: [
+        {
+          product_id: "pdt_0NWd9SA5jGlOQIhWLPf83",
+          quantity: 1,
+        },
+      ],
+    });
+    return res;
   });

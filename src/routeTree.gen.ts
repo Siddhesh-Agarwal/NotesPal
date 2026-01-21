@@ -20,6 +20,8 @@ import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as ApiCustomerPortalRouteImport } from './routes/api/customer-portal'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
+import { Route as ApiWebhooksDodopaymentsRouteImport } from './routes/api/webhooks/dodopayments'
+import { Route as ApiWebhooksClerkRouteImport } from './routes/api/webhooks/clerk'
 
 const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
   id: '/terms-and-conditions',
@@ -76,6 +78,16 @@ const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
   path: '/api/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksDodopaymentsRoute = ApiWebhooksDodopaymentsRouteImport.update({
+  id: '/api/webhooks/dodopayments',
+  path: '/api/webhooks/dodopayments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksClerkRoute = ApiWebhooksClerkRouteImport.update({
+  id: '/api/webhooks/clerk',
+  path: '/api/webhooks/clerk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +101,8 @@ export interface FileRoutesByFullPath {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/dodopayments': typeof ApiWebhooksDodopaymentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +116,8 @@ export interface FileRoutesByTo {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/dodopayments': typeof ApiWebhooksDodopaymentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +132,8 @@ export interface FileRoutesById {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/dodopayments': typeof ApiWebhooksDodopaymentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +149,8 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/dodopayments'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +164,8 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/dodopayments'
   id:
     | '__root__'
     | '/'
@@ -157,6 +179,8 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/dodopayments'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +195,8 @@ export interface RootRouteChildren {
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   NoteNoteIdRoute: typeof NoteNoteIdRoute
+  ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute
+  ApiWebhooksDodopaymentsRoute: typeof ApiWebhooksDodopaymentsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +278,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/dodopayments': {
+      id: '/api/webhooks/dodopayments'
+      path: '/api/webhooks/dodopayments'
+      fullPath: '/api/webhooks/dodopayments'
+      preLoaderRoute: typeof ApiWebhooksDodopaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/clerk': {
+      id: '/api/webhooks/clerk'
+      path: '/api/webhooks/clerk'
+      fullPath: '/api/webhooks/clerk'
+      preLoaderRoute: typeof ApiWebhooksClerkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,6 +307,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   NoteNoteIdRoute: NoteNoteIdRoute,
+  ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
+  ApiWebhooksDodopaymentsRoute: ApiWebhooksDodopaymentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

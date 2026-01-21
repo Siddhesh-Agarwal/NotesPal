@@ -1,4 +1,4 @@
-import { useSignIn, useUser } from "@clerk/clerk-react";
+import { useSignIn, useUser } from "@clerk/tanstack-react-start";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { LogInIcon, MoveLeft } from "lucide-react";
@@ -83,7 +83,7 @@ function RouteComponent() {
 
   return (
     <div className="bg-background h-screen grid place-items-center">
-      <div className="max-w-xl w-full">
+      <div className="max-w-xl w-full p-4">
         <Link to="/" className="flex gap-2 mb-2 hover:underline">
           <MoveLeft />
           Back

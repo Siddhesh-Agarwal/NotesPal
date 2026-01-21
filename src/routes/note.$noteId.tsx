@@ -1,4 +1,4 @@
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -36,7 +36,8 @@ export const Route = createFileRoute("/note/$noteId")({
 
 function RouteComponent() {
   const { noteId } = Route.useParams();
-  const { userId } = useAuth();
+  const { isSignedIn, isLoaded, user } = useUser();
+  const userId = user?.id;
   const {
     data,
     status: noteStatus,
@@ -67,7 +68,6 @@ function RouteComponent() {
   const pendingUpdateRef = useRef<Pick<Note, "content" | "tapeColor"> | null>(
     null,
   );
-  const { isSignedIn, isLoaded } = useUser();
 
   // Initialize note from query data
   useEffect(() => {
@@ -192,7 +192,10 @@ function RouteComponent() {
               <ButtonGroup>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button className="w-36">
+                    <Button
+                      className="w-36"
+                      style={{ backgroundColor: note.tapeColor }}
+                    >
                       <PaletteIcon size={18} />
                       Tape Color
                     </Button>
@@ -215,6 +218,7 @@ function RouteComponent() {
                 <Button
                   onClick={() => setIsPreview((val) => !val)}
                   className="w-36"
+                  style={{ backgroundColor: note.tapeColor }}
                 >
                   {isPreview ? (
                     <>
@@ -234,11 +238,10 @@ function RouteComponent() {
         </div>
 
         <div
-          className="bg-white rounded-sm shadow-2xl p-8 relative font-serif"
+          className="bg-white rounded-sm shadow-2xl p-8 relative font-serif min-h-150"
           style={{
             backgroundImage:
               "repeating-linear-gradient(transparent, transparent 31px, #e5e7eb 31px, #e5e7eb 32px)",
-            minHeight: "600px",
           }}
         >
           <div

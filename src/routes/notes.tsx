@@ -1,4 +1,4 @@
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -35,10 +35,17 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
-import { createNoteFn, deleteNoteFn, getNotesFn } from "@/functions";
+import {
+  createNoteFn,
+  deleteNoteFn,
+  getCustomerPortalFn,
+  getNotesFn,
+  getUserFn,
+} from "@/functions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { queryClient } from "@/integrations/query";
 import { getAvatarUrl } from "@/lib/avatar";
+import { store } from "@/store";
 
 export const Route = createFileRoute("/notes")({
   component: RouteComponent,
@@ -59,6 +66,12 @@ function RouteComponent() {
     queryFn: () => getNotesFn({ data: { userId: user?.id ?? "" } }),
     enabled: !!user?.id,
   });
+  const { data: userInternal } = useQuery({
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserFn({ data: { userId: user?.id ?? "" } }),
+    enabled: !!user?.id,
+  });
+  store.setState(userInternal);
   const { mutateAsync: deleteNoteAsync } = useMutation({
     mutationKey: ["deleteNote", user?.id],
     mutationFn: ({ id }: { id: string }) =>
@@ -76,6 +89,14 @@ function RouteComponent() {
         }),
       onSuccess: () => refetchNotes(),
     });
+  const { data: customerPortal } = useQuery({
+    queryKey: ["customerPortal", user?.id],
+    queryFn: () =>
+      getCustomerPortalFn({
+        data: { customerId: store.state?.customerId ?? "" },
+      }),
+    enabled: !!store.state?.customerId,
+  });
 
   async function refetchNotes() {
     await queryClient.invalidateQueries({
@@ -130,10 +151,14 @@ function RouteComponent() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2" onClick={() => {}}>
-                  <DollarSignIcon />
-                  Manage Subscription
-                </DropdownMenuItem>
+                {customerPortal?.link && (
+                  <Link to={customerPortal.link} target="_blank">
+                    <DropdownMenuItem className="gap-2">
+                      <DollarSignIcon />
+                      Manage Subscription
+                    </DropdownMenuItem>
+                  </Link>
+                )}
                 <DropdownMenuItem
                   className="gap-2"
                   onClick={() => navigate({ to: "/profile" })}
@@ -197,6 +222,7 @@ function RouteComponent() {
                   params={{
                     noteId: note.id,
                   }}
+                  preload="intent"
                 >
                   <NoteCard
                     key={note.id}

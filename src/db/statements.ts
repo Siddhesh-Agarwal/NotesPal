@@ -12,7 +12,7 @@ export const getUserNotesStatement = db
 export const getUserNoteStatement = db
   .select({
     note: notesTable,
-    user: userTable
+    user: userTable,
   })
   .from(notesTable)
   .innerJoin(userTable, eq(notesTable.userId, userTable.id))
@@ -25,7 +25,15 @@ export const getUserNoteStatement = db
   .prepare();
 
 export const getUserStatement = db
-  .select()
+  .select({
+    id: userTable.id,
+    firstName: userTable.firstName,
+    lastName: userTable.lastName,
+    email: userTable.email,
+    customerId: userTable.customerId,
+    subscribedTill: userTable.subscribedTill,
+    createdAt: userTable.createdAt,
+  })
   .from(userTable)
   .where(eq(userTable.id, sql.placeholder("userId")));
 

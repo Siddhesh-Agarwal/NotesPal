@@ -1,4 +1,4 @@
-import { useSignUp } from "@clerk/clerk-react";
+import { useSignUp } from "@clerk/tanstack-react-start";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogInIcon, MoveLeft } from "lucide-react";
@@ -32,7 +32,6 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { metadata } from "@/data/meta";
-import { createUserFn } from "@/functions";
 import { otpFormSchema, signupFormSchema } from "@/schema";
 
 export const Route = createFileRoute("/auth/sign-up")({
@@ -77,12 +76,6 @@ function RouteComponent() {
           toast.error("User ID not found");
           return;
         }
-        await createUserFn({
-          data: {
-            userId: signUpResult.createdUserId,
-            data,
-          },
-        });
         await setActive({ session: signUp.createdSessionId });
       } else {
         await signUpResult.prepareEmailAddressVerification({
