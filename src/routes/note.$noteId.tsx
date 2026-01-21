@@ -8,7 +8,7 @@ import {
   EyeOffIcon,
   PaletteIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import MarkdownPreview from "@/components/markdown-preview";
 import { TAPE_COLORS } from "@/components/note";
@@ -119,16 +119,13 @@ function RouteComponent() {
     };
   }, [updateNote]);
 
-  const handleContentChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setNote((prev) => (prev ? { ...prev, content: e.target.value } : null));
-    },
-    [],
-  );
+  function handleContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setNote((prev) => (prev ? { ...prev, content: e.target.value } : null));
+  }
 
-  const handleColorChange = useCallback((color: string) => {
+  function handleColorChange(color: string) {
     setNote((prev) => (prev ? { ...prev, tapeColor: color } : null));
-  }, []);
+  }
 
   if (noteStatus === "pending" || !isLoaded) {
     return (
@@ -174,10 +171,7 @@ function RouteComponent() {
           <Alert variant="destructive" className="mb-4">
             <AlertCircleIcon className="h-4 w-4" />
             <AlertTitle>Save Failed</AlertTitle>
-            <AlertDescription>
-              {saveError.message ??
-                "Failed to save your note. Your changes may be lost."}
-            </AlertDescription>
+            <AlertDescription>{saveError.message}</AlertDescription>
           </Alert>
         )}
 
