@@ -165,7 +165,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-chart-5 to-chart-4 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
         {saveError && (
           <Alert variant="destructive" className="mb-4">
@@ -198,7 +198,7 @@ function RouteComponent() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="bg-background">
-                    <div className="grid grid-cols-4 gap-2 z-10">
+                    <div className="grid grid-cols-4 gap-2">
                       {TAPE_COLORS.map((color) => (
                         <Button
                           key={color.value}
