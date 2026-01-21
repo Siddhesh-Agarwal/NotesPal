@@ -189,21 +189,24 @@ function RouteComponent() {
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+          <div className="columns-xs gap-4 space-y-4">
             {notes.map((note) => (
-              <Link
-                to="/note/$noteId"
-                key={note.id}
-                params={{
-                  noteId: note.id,
-                }}
-              >
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  onDelete={async () => await deleteNoteAsync({ id: note.id })}
-                />
-              </Link>
+              <div key={note.id} className="break-inside-avoid mb-4">
+                <Link
+                  to="/note/$noteId"
+                  params={{
+                    noteId: note.id,
+                  }}
+                >
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onDelete={async () =>
+                      await deleteNoteAsync({ id: note.id })
+                    }
+                  />
+                </Link>
+              </div>
             ))}
           </div>
         )}
