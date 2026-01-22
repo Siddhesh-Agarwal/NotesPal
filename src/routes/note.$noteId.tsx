@@ -11,7 +11,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import MarkdownPreview from "@/components/markdown-preview";
-import { TAPE_COLORS } from "@/components/note";
 import NotFoundPage from "@/components/page/not-found";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -26,9 +25,10 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { TAPE_COLORS } from "@/data";
 import { getNoteFn, updateNoteFn } from "@/functions";
 import { queryClient } from "@/integrations/query";
-import type { Note } from "@/types/note";
+import type { Note } from "@/types";
 
 export const Route = createFileRoute("/note/$noteId")({
   component: RouteComponent,

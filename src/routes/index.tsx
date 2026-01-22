@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { metadata } from "@/data/meta";
+import { metadata } from "@/data";
 
 export const Route = createFileRoute("/")({
   component: App,

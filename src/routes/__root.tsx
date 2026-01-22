@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Toaster } from "@/components/ui/sonner";
-import { metadata } from "@/data/meta";
+import { metadata } from "@/data";
 import appCss from "@/styles.css?url";
 
 interface MyRouterContext {

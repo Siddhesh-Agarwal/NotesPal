@@ -31,7 +31,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { metadata } from "@/data/meta";
+import { metadata } from "@/data";
 import { otpFormSchema, signupFormSchema } from "@/schema";
 
 export const Route = createFileRoute("/auth/sign-up")({

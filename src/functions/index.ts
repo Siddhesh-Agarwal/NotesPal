@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { and, eq } from "drizzle-orm";
 import z from "zod";
-import { TAPE_COLORS } from "@/components/note";
+import { TAPE_COLORS } from "@/data";
 import { db } from "@/db";
 import { notesTable, userTable } from "@/db/schema";
 import {
