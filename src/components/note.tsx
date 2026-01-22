@@ -39,8 +39,10 @@ export function NoteCard({
         ) : (
           <Empty>
             <EmptyHeader>
-                <EmptyTitle>No content</EmptyTitle>
-                <EmptyDescription>Start writing your note here...</EmptyDescription>
+              <EmptyTitle>No content</EmptyTitle>
+              <EmptyDescription>
+                Start writing your note here...
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         )}
