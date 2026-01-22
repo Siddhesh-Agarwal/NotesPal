@@ -2,14 +2,12 @@ import { useSignUp } from "@clerk/tanstack-react-start";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogInIcon, MoveLeft } from "lucide-react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod/v4";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -19,47 +17,29 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 import { metadata } from "@/data";
-import { otpFormSchema, signupFormSchema } from "@/schema";
+import { signupFormSchema } from "@/schema";
 
 export const Route = createFileRoute("/auth/sign-up")({
   component: RouteComponent,
 });
 
 type SignupFormSchema = z.infer<typeof signupFormSchema>;
-type OtpFormSchema = z.infer<typeof otpFormSchema>;
 
 function RouteComponent() {
   const signupForm = useForm<SignupFormSchema>({
     resolver: zodResolver(signupFormSchema),
   });
-  const otpForm = useForm<OtpFormSchema>({
-    resolver: zodResolver(otpFormSchema),
-  });
   const { isLoaded, signUp, setActive } = useSignUp();
-  const [verifying, setVerifying] = useState(false);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
 
   async function onSubmitSignUpForm(data: SignupFormSchema) {
-    if (data.password !== data.confirmPassword) {
-      signupForm.setError("confirmPassword", {
-        type: "manual",
-        message: "Passwords do not match",
-      });
-      return;
-    }
-
     if (!isLoaded) return;
 
     try {
@@ -77,57 +57,18 @@ function RouteComponent() {
           return;
         }
         await setActive({ session: signUp.createdSessionId });
-      } else {
+      } else if (signUpResult.status === "missing_requirements") {
         await signUpResult.prepareEmailAddressVerification({
-          strategy: "email_code",
+          strategy: "email_link",
+          redirectUrl: "/notes",
         });
-        setVerifying(true);
-      }
-    } catch (err) {
-      const name =
-        err instanceof Error ? err.name : "An unknown error occurred";
-      const message =
-        err instanceof Error ? err.message : "Please try again later";
-      toast.error(name, { description: message });
-    }
-  }
-
-  async function onSubmitVerifyCodeForm(values: OtpFormSchema) {
-    if (!isLoaded || !signUp) return;
-
-    try {
-      const result = await signUp.attemptEmailAddressVerification({
-        code: values.otp,
-      });
-
-      if (result.status === "complete") {
-        if (!result.createdUserId) {
-          toast.error("User ID not found");
-          return;
-        }
-        await setActive({ session: signUp.createdSessionId });
+        setEmailVerificationSent(true);
       } else {
-        toast.error("Verification failed", {
-          description: "Invalid code. Please try again.",
-        });
+        toast.error("An unknown error occurred");
       }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Verification failed";
-      toast.error("Error", { description: message });
-    }
-  }
-
-  async function resentOTP() {
-    if (!signUp) return;
-
-    try {
-      await signUp.prepareEmailAddressVerification({
-        strategy: "email_code",
-      });
-      toast.success("Code resent");
-    } catch {
-      toast.error("Failed to resend code");
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      toast.error(err?.errors?.[0]?.message || "An unknown error occurred");
     }
   }
 
@@ -138,102 +79,25 @@ function RouteComponent() {
           <MoveLeft />
           Back
         </Link>
-        {verifying ? (
-          <Card className="w-full border-border shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl">Verify Email</CardTitle>
-              <CardDescription className="text-lg">
-                Enter the 6-digit code sent to your email
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...otpForm}>
-                <form
-                  onSubmit={otpForm.handleSubmit(onSubmitVerifyCodeForm)}
-                  className="flex flex-col items-center space-y-4"
-                >
-                  <FormField
-                    control={otpForm.control}
-                    name="otp"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Enter OTP</FormLabel>
-                        <FormControl>
-                          <InputOTP maxLength={6} {...field}>
-                            <InputOTPGroup>
-                              <InputOTPSlot
-                                index={0}
-                                className="border-border"
-                              />
-                              <InputOTPSlot
-                                index={1}
-                                className="border-border"
-                              />
-                              <InputOTPSlot
-                                index={2}
-                                className="border-border"
-                              />
-                              <InputOTPSlot
-                                index={3}
-                                className="border-border"
-                              />
-                              <InputOTPSlot
-                                index={4}
-                                className="border-border"
-                              />
-                              <InputOTPSlot
-                                index={5}
-                                className="border-border"
-                              />
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </FormControl>
-                        <FormMessage />
-                        <FormDescription>
-                          Enter the 6-digit code sent to your email.
-                        </FormDescription>
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex gap-2">
-                    <CardAction>
-                      <Button
-                        type="submit"
-                        variant="default"
-                        disabled={
-                          !isLoaded ||
-                          otpForm.formState.isSubmitting ||
-                          !otpForm.formState.isValid
-                        }
-                      >
-                        Verify
-                      </Button>
-                    </CardAction>
-                    <CardAction>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={async () => resentOTP()}
-                        disabled={!isLoaded || otpForm.formState.isSubmitting}
-                      >
-                        Resend Code
-                      </Button>
-                    </CardAction>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="w-full border-border shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl">Sign Up</CardTitle>
-              <CardDescription className="text-lg">
-                Register for your {metadata.title} account
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+        <Card className="w-full border-border shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl">Sign Up</CardTitle>
+            <CardDescription className="text-lg">
+              Register for your {metadata.title} account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {emailVerificationSent ? (
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  Click the link in the email to verify your account and
+                  complete signup. The link will redirect you to your notes.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Didn't receive the email? Check your spam folder.
+                </p>
+              </div>
+            ) : (
               <Form {...signupForm}>
                 <form
                   onSubmit={signupForm.handleSubmit(onSubmitSignUpForm)}
@@ -389,9 +253,9 @@ function RouteComponent() {
                   </div>
                 </form>
               </Form>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

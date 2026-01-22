@@ -14,6 +14,9 @@ importers:
       '@clerk/themes':
         specifier: ^2.4.49
         version: 2.4.49(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/types':
+        specifier: ^4.101.12
+        version: 4.101.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@dicebear/collection':
         specifier: ^9.3.0
         version: 9.3.0(@dicebear/core@9.3.0)
@@ -392,8 +395,8 @@ packages:
     resolution: {integrity: sha512-S8u0IROKple9K6oD8T8U84tYuwR1WNjolHFPlmxgvXGfCx7gQEGubxvVo9RllBrTwiBz4U9HeLxsxg/0Ma0qUQ==}
     engines: {node: '>=18.17.0'}
 
-  '@clerk/types@4.101.11':
-    resolution: {integrity: sha512-6m1FQSLFqb4L+ovMDxNIRSrw6I0ByVX5hs6slcevOaaD5UXNzSANWqVtKaU80AZwcm391lZqVS5fRisHt9tmXA==}
+  '@clerk/types@4.101.12':
+    resolution: {integrity: sha512-ePXOla3B1qgPtV0AzrLx2PVC3s/lsjOSYnuIFAxaIlRNT2+eb/BjeoqtTOcezwbdQ00jQ2RvXahdfZRSEuvZ7A==}
     engines: {node: '>=18.17.0'}
 
   '@cloudflare/kv-asset-handler@0.4.2':
@@ -3710,7 +3713,7 @@ snapshots:
   '@clerk/backend@2.29.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@clerk/shared': 3.43.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@clerk/types': 4.101.11(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/types': 4.101.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       standardwebhooks: 1.0.0
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -3753,7 +3756,7 @@ snapshots:
       '@clerk/backend': 2.29.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@clerk/clerk-react': 5.59.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@clerk/shared': 3.43.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@clerk/types': 4.101.11(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/types': 4.101.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/react-router': 1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/react-start': 1.153.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(vite@7.3.1(@types/node@22.19.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
       react: 19.2.3
@@ -3768,9 +3771,9 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/types@4.101.11(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@clerk/types@4.101.12(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@clerk/shared': 3.43.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@clerk/shared': 3.43.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     transitivePeerDependencies:
       - react
       - react-dom
