@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/tanstack-react-start";
+import { shadcn } from "@clerk/themes";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
@@ -103,6 +104,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ClerkProvider
           publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
+          appearance={{
+            theme: shadcn,
+          }}
         >
           {children}
           <Toaster richColors position="bottom-right" />

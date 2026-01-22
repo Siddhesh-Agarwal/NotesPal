@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@clerk/tanstack-react-start": "^0.27.15",
+    "@clerk/themes": "^2.4.49",
     "@dicebear/collection": "^9.3.0",
     "@dicebear/core": "^9.3.0",
     "@dodopayments/tanstack": "^0.2.5",
