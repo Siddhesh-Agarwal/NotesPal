@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/tanstack-react-start";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { KeyRound, MoveLeft, Trash2, UserPen } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -56,7 +56,6 @@ function RouteComponent() {
       email: emailAddress ?? "",
     },
   });
-
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordFormSchema),
     defaultValues: {
@@ -65,6 +64,7 @@ function RouteComponent() {
       confirmNewPassword: "",
     },
   });
+  const navigate = useNavigate();
 
   if (!isLoaded) {
     return (
@@ -106,13 +106,6 @@ function RouteComponent() {
       toast.error("User not found");
       return;
     }
-    if (values.confirmNewPassword !== values.newPassword) {
-      passwordForm.setError("confirmNewPassword", {
-        type: "custom",
-        message: "Passwords do not match",
-      });
-      return;
-    }
     await user
       .updatePassword({
         newPassword: values.newPassword,
@@ -121,9 +114,28 @@ function RouteComponent() {
       .then(() => {
         toast.success("Password updated successfully!");
       })
-      .catch(() => {
-        toast.error("Password update failed.");
+      .catch((err) => {
+        toast.error("Password update failed.", {
+          description:
+            err instanceof Error ? err.message : "Something went wrong.",
+        });
       });
+  }
+
+  async function handleAccountDelete() {
+    if (!user) {
+      toast.error("User not found");
+      return;
+    }
+    try {
+      await user.delete();
+      toast.success("Account deleted");
+      navigate({ to: "/" });
+    } catch (error) {
+      toast.error("Failed to delete account", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   }
 
   return (
@@ -313,7 +325,7 @@ function RouteComponent() {
                 </Dialog>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="destructive" className="flex flex-1 gap-2">
+                    <Button variant="destructive" className="flex gap-2">
                       <Trash2 />
                       Delete Account
                     </Button>
@@ -327,7 +339,11 @@ function RouteComponent() {
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                      <Button variant="destructive" className="flex gap-2">
+                      <Button
+                        variant="destructive"
+                        className="flex gap-2"
+                        onClick={handleAccountDelete}
+                      >
                         <Trash2 />
                         Delete
                       </Button>
