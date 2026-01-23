@@ -38,6 +38,7 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   createNoteFn,
   deleteNoteFn,
+  getCheckoutSessionFn,
   getCustomerPortalFn,
   getNotesFn,
   getUserFn,
@@ -95,7 +96,15 @@ function RouteComponent() {
       getCustomerPortalFn({
         data: { customerId: store.state?.customerId ?? "" },
       }),
-    enabled: !!store.state?.customerId,
+    enabled: !!store.state?.customerId && !!userInternal?.subscribedTill,
+  });
+  const { data: checkoutData } = useQuery({
+    queryKey: ["checkout", user?.id],
+    queryFn: () =>
+      getCheckoutSessionFn({
+        data: { customerId: store.state?.customerId ?? "" },
+      }),
+    enabled: !!store.state?.customerId && userInternal?.subscribedTill === null,
   });
 
   async function refetchNotes() {
@@ -155,7 +164,15 @@ function RouteComponent() {
                   <Link to={customerPortal.link} target="_blank">
                     <DropdownMenuItem className="gap-2">
                       <DollarSignIcon />
-                      Manage Subscription
+                      Manage Purchase
+                    </DropdownMenuItem>
+                  </Link>
+                )}
+                {checkoutData?.checkout_url && (
+                  <Link to={checkoutData.checkout_url} target="_blank">
+                    <DropdownMenuItem className="gap-2">
+                      <DollarSignIcon />
+                      Purchase
                     </DropdownMenuItem>
                   </Link>
                 )}
