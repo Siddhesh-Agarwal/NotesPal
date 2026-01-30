@@ -38,12 +38,14 @@ const benefits: BenefitsType[] = [
   {
     icon: FileLock2,
     title: "Encryption",
-    description: "Your notes are encrypted and secure. Each note is encrypted using a unique key.",
+    description:
+      "Your notes are encrypted and secure. Each note is encrypted using a unique key.",
   },
   {
     icon: FolderSync,
     title: "Sync Notes",
-    description: "Sync your notes across devices. Keep your notes in sync across all your devices.",
+    description:
+      "Sync your notes across devices. Keep your notes in sync across all your devices.",
   },
 ];
 

@@ -59,8 +59,8 @@ function RouteComponent() {
         <p>
           NotesPal operates on a subscription model priced at{" "}
           <strong>$5 per year</strong>. All payments are securely processed
-          through <strong>Dodopayments</strong>. Subscriptions automatically renew
-          unless canceled before the renewal date.
+          through <strong>Dodopayments</strong>. Subscriptions automatically
+          renew unless canceled before the renewal date.
         </p>
         <p>
           We reserve the right to change the subscription price, with advance
