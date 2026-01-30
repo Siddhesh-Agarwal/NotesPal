@@ -43,7 +43,6 @@
     "clsx": "^2.1.1",
     "dodopayments": "^2.14.3",
     "drizzle-orm": "^0.44.7",
-    "input-otp": "^1.4.2",
     "lucide-react": "^0.544.0",
     "marked": "^16.4.2",
     "moment": "^2.30.1",
