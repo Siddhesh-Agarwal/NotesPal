@@ -152,7 +152,6 @@ export const getCheckoutSessionFn = createServerFn({ method: "GET" })
     const res = await DodoPaymentsClient.checkoutSessions.create({
       customer: {
         customer_id: customerId,
-        email: user.email,
       },
       product_cart: [
         {

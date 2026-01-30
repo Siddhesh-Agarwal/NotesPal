@@ -1,6 +1,7 @@
 import { useClerk } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useStore } from "@tanstack/react-store";
 import {
   DollarSignIcon,
   LogOutIcon,
@@ -54,6 +55,7 @@ export const Route = createFileRoute("/notes")({
 
 function RouteComponent() {
   const { signOut, isSignedIn, user } = useClerk();
+  const storeState = useStore(store);
   const emailAddress = user?.primaryEmailAddress?.emailAddress;
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -67,12 +69,17 @@ function RouteComponent() {
     queryFn: () => getNotesFn({ data: { userId: user?.id ?? "" } }),
     enabled: !!user?.id,
   });
-  const { data: userInternal } = useQuery({
+  useQuery({
     queryKey: ["user", user?.id],
-    queryFn: () => getUserFn({ data: { userId: user?.id ?? "" } }),
+    queryFn: () =>
+      getUserFn({ data: { userId: user?.id ?? "" } }).then((val) => {
+        if (!val) {
+          toast.error("Failed to get user");
+        }
+        store.setState(val);
+      }),
     enabled: !!user?.id,
   });
-  store.setState(userInternal);
   const { mutateAsync: deleteNoteAsync } = useMutation({
     mutationKey: ["deleteNote", user?.id],
     mutationFn: ({ id }: { id: string }) =>
@@ -94,17 +101,22 @@ function RouteComponent() {
     queryKey: ["customerPortal", user?.id],
     queryFn: () =>
       getCustomerPortalFn({
-        data: { customerId: store.state?.customerId ?? "" },
+        data: { customerId: storeState?.customerId ?? "" },
       }),
-    enabled: !!store.state?.customerId && !!userInternal?.subscribedTill,
+    enabled:
+      !!storeState?.customerId &&
+      !!storeState?.subscribedTill &&
+      storeState.subscribedTill > new Date(),
   });
   const { data: checkoutData } = useQuery({
     queryKey: ["checkout", user?.id],
     queryFn: () =>
       getCheckoutSessionFn({
-        data: { customerId: store.state?.customerId ?? "" },
+        data: { customerId: storeState?.customerId ?? "" },
       }),
-    enabled: !!store.state?.customerId && userInternal?.subscribedTill === null,
+    enabled:
+      !!storeState?.customerId &&
+      (!storeState?.subscribedTill || storeState.subscribedTill <= new Date()),
   });
 
   async function refetchNotes() {
@@ -160,21 +172,22 @@ function RouteComponent() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {customerPortal?.link && (
+                {customerPortal?.link ? (
                   <Link to={customerPortal.link} target="_blank">
                     <DropdownMenuItem className="gap-2">
                       <DollarSignIcon />
                       Manage Purchase
                     </DropdownMenuItem>
                   </Link>
-                )}
-                {checkoutData?.checkout_url && (
-                  <Link to={checkoutData.checkout_url} target="_blank">
-                    <DropdownMenuItem className="gap-2">
-                      <DollarSignIcon />
-                      Purchase
-                    </DropdownMenuItem>
-                  </Link>
+                ) : (
+                  checkoutData?.checkout_url && (
+                    <Link to={checkoutData.checkout_url} target="_blank">
+                      <DropdownMenuItem className="gap-2">
+                        <DollarSignIcon />
+                        Purchase NotesPal
+                      </DropdownMenuItem>
+                    </Link>
+                  )
                 )}
                 <DropdownMenuItem
                   className="gap-2"
