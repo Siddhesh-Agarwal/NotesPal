@@ -325,7 +325,7 @@ function RouteComponent() {
                 </Dialog>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="destructive" className="flex gap-2">
+                    <Button variant="destructive" className="flex flex-1 gap-2">
                       <Trash2 />
                       Delete Account
                     </Button>

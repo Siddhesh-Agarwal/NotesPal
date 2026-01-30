@@ -259,7 +259,7 @@ function RouteComponent() {
             <Textarea
               value={note.content}
               onChange={handleContentChange}
-              className="w-full h-full bg-transparent border-none outline-none resize-none text-foreground font-mono"
+              className="w-full h-full bg-transparent border-none outline-none focus-visible:ring-0 focus-visible:border-none focus:ring-0 shadow-none resize-none text-foreground font-mono"
               style={{
                 lineHeight: "32px",
                 minHeight: "500px",
