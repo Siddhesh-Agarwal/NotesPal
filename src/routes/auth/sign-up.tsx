@@ -1,7 +1,8 @@
 import { useSignUp } from "@clerk/tanstack-react-start";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { LogInIcon, MoveLeft } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod/v4";
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/auth/sign-up")({
 type SignupFormSchema = z.infer<typeof signupFormSchema>;
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const signupForm = useForm<SignupFormSchema>({
     resolver: zodResolver(signupFormSchema),
   });
@@ -57,10 +59,11 @@ function RouteComponent() {
           return;
         }
         await setActive({ session: signUp.createdSessionId });
+        navigate({ to: "/auth/checkout" });
       } else if (signUpResult.status === "missing_requirements") {
         await signUpResult.prepareEmailAddressVerification({
           strategy: "email_link",
-          redirectUrl: "/notes",
+          redirectUrl: "/auth/checkout",
         });
         setEmailVerificationSent(true);
       } else {
@@ -91,7 +94,8 @@ function RouteComponent() {
               <div className="space-y-4">
                 <p className="text-muted-foreground">
                   Click the link in the email to verify your account and
-                  complete signup. The link will redirect you to your notes.
+                  complete signup. You'll be redirected to purchase your
+                  subscription.
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Didn't receive the email? Check your spam folder.

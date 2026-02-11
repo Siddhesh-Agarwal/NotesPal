@@ -17,16 +17,17 @@ function checkUserSubscription(
   user: NonNullable<Awaited<ReturnType<typeof getUserStatement.get>>>,
 ) {
   if (user.subscribedTill === null) {
+    const now = new Date();
     const thirtyDaysLater = new Date(
       user.createdAt.valueOf() + 30 * 24 * 60 * 60 * 1000,
     );
-    if (user.createdAt <= thirtyDaysLater) {
+    if (now <= thirtyDaysLater) {
       return;
     }
-    throw new Error("Failed to set subscription date");
+    throw new Error("Trial period expired. Please subscribe to continue.");
   }
   if (user.subscribedTill < new Date()) {
-    throw new Error("User not subscribed");
+    throw new Error("Subscription expired. Please renew to continue.");
   }
 }
 

@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
+import { Route as AuthCheckoutRouteImport } from './routes/auth/checkout'
 import { Route as ApiCustomerPortalRouteImport } from './routes/api/customer-portal'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
 import { Route as ApiWebhooksDodopaymentsRouteImport } from './routes/api/webhooks/dodopayments'
@@ -68,6 +69,11 @@ const AuthSignInRoute = AuthSignInRouteImport.update({
   path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCheckoutRoute = AuthCheckoutRouteImport.update({
+  id: '/auth/checkout',
+  path: '/auth/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCustomerPortalRoute = ApiCustomerPortalRouteImport.update({
   id: '/api/customer-portal',
   path: '/api/customer-portal',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/auth/checkout': typeof AuthCheckoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/auth/checkout': typeof AuthCheckoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/auth/checkout': typeof AuthCheckoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/api/checkout'
     | '/api/customer-portal'
+    | '/auth/checkout'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/api/checkout'
     | '/api/customer-portal'
+    | '/auth/checkout'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/terms-and-conditions'
     | '/api/checkout'
     | '/api/customer-portal'
+    | '/auth/checkout'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
@@ -192,6 +204,7 @@ export interface RootRouteChildren {
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   ApiCustomerPortalRoute: typeof ApiCustomerPortalRoute
+  AuthCheckoutRoute: typeof AuthCheckoutRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   NoteNoteIdRoute: typeof NoteNoteIdRoute
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/checkout': {
+      id: '/auth/checkout'
+      path: '/auth/checkout'
+      fullPath: '/auth/checkout'
+      preLoaderRoute: typeof AuthCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/customer-portal': {
       id: '/api/customer-portal'
       path: '/api/customer-portal'
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
   ApiCustomerPortalRoute: ApiCustomerPortalRoute,
+  AuthCheckoutRoute: AuthCheckoutRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   NoteNoteIdRoute: NoteNoteIdRoute,
