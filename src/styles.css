@@ -1,20 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
-
-@font-face {
-    font-family: "Architects Daughter";
-    src: url("/src/assets/ArchitectsDaughter-Regular.ttf") format("truetype");
-    font-weight: 100 900;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Inter";
-    src: url("/src/assets/Inter-VariableFont.ttf") format("truetype");
-    font-weight: 100 900;
-    font-style: normal;
-}
+@import '@fontsource-variable/inter';
+@import '@fontsource/architects-daughter';
 
 @layer utilities {
     .bg-grid-16 {
@@ -102,7 +90,7 @@
     --sidebar-border: oklch(0.8078 0 0);
     --sidebar-ring: oklch(0.7058 0 0);
     --font-sans: "Inter", sans-serif;
-    --font-serif: "Architects Daughter", serif;
+    --font-serif: "Architects Daughter", cursive;
     --radius: 0.625rem;
     --shadow-x: 1px;
     --shadow-y: 4px;
