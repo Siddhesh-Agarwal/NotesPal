@@ -1,9 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { and, eq } from "drizzle-orm";
 import z from "zod";
 import { TAPE_COLORS } from "@/data";
 import { db } from "@/db";
-import { notesTable, userTable } from "@/db/schema";
+import { notes as notesTable, user as userTable } from "@/db/schema";
 import {
   deleteNoteStatement,
   getUserNoteStatement,
@@ -11,7 +12,8 @@ import {
   getUserStatement,
 } from "@/db/statements";
 import { DodoPaymentsClient } from "@/integrations/dodopayments";
-import { noteSchema, userAndNoteSchema, userIdSchema } from "@/schema";
+import { auth } from "@/lib/auth";
+import { noteSchema } from "@/schema";
 
 function checkUserSubscription(
   user: NonNullable<Awaited<ReturnType<typeof getUserStatement.get>>>,
@@ -31,18 +33,27 @@ function checkUserSubscription(
   }
 }
 
-export const getNotesFn = createServerFn({ method: "GET" })
-  .inputValidator(userIdSchema)
-  .handler(async (req) => {
-    const { userId } = req.data;
+export const getNotesFn = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const request = getRequest?.();
+    const session = await auth.api.getSession({
+      headers: request?.headers,
+    });
+    if (!session) throw new Error("Unauthorized");
+    const userId = session.user.id;
     const notes = await getUserNotesStatement.all({ userId });
     return notes.map((note) => note.notes);
-  });
+  },
+);
 
-export const createNoteFn = createServerFn({ method: "POST" })
-  .inputValidator(userIdSchema)
-  .handler(async (req) => {
-    const { userId } = req.data;
+export const createNoteFn = createServerFn({ method: "POST" }).handler(
+  async () => {
+    const request = getRequest?.();
+    const session = await auth.api.getSession({
+      headers: request?.headers,
+    });
+    if (!session) throw new Error("Unauthorized");
+    const userId = session.user.id;
     const user = await getUserStatement.get({ userId });
     if (user === undefined) {
       throw new Error("User not found");
@@ -59,12 +70,19 @@ export const createNoteFn = createServerFn({ method: "POST" })
       })
       .returning();
     return note !== undefined;
-  });
+  },
+);
 
 export const getNoteFn = createServerFn({ method: "GET" })
-  .inputValidator(userAndNoteSchema)
+  .inputValidator(z.object({ noteId: z.string() }))
   .handler(async (req) => {
-    const { userId, noteId } = req.data;
+    const request = getRequest?.();
+    const session = await auth.api.getSession({
+      headers: request?.headers,
+    });
+    if (!session) throw new Error("Unauthorized");
+    const userId = session.user.id;
+    const { noteId } = req.data;
     const result = await getUserNoteStatement.get({ userId, noteId });
     if (result === undefined) {
       throw new Error("Note or user not found");
@@ -76,12 +94,18 @@ export const getNoteFn = createServerFn({ method: "GET" })
 export const updateNoteFn = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
-      ...userAndNoteSchema.shape,
+      noteId: z.string(),
       note: noteSchema,
     }),
   )
   .handler(async (req) => {
-    const { userId, noteId, note } = req.data;
+    const request = getRequest?.();
+    const session = await auth.api.getSession({
+      headers: request?.headers,
+    });
+    if (!session) throw new Error("Unauthorized");
+    const userId = session.user.id;
+    const { noteId, note } = req.data;
     const fetchedNote = await getUserNoteStatement.get({ userId, noteId });
     if (!fetchedNote) {
       throw new Error("Note not found");
@@ -102,9 +126,16 @@ export const updateNoteFn = createServerFn({ method: "POST" })
   });
 
 export const deleteNoteFn = createServerFn({ method: "POST" })
-  .inputValidator(userAndNoteSchema)
+  .inputValidator(z.object({ noteId: z.string() }))
   .handler(async (request) => {
-    const { userId, noteId } = request.data;
+    const req = getRequest?.();
+    const session = await auth.api.getSession({
+      headers: req?.headers,
+    });
+    if (!session) throw new Error("Unauthorized");
+
+    const userId = session.user.id;
+    const { noteId } = request.data;
     const deletedNote = await deleteNoteStatement.get({ userId, noteId });
     if (deletedNote === undefined) {
       throw new Error("Note not found");
@@ -112,15 +143,19 @@ export const deleteNoteFn = createServerFn({ method: "POST" })
     return deletedNote;
   });
 
-export const getUserFn = createServerFn({ method: "GET" })
-  .inputValidator(userIdSchema)
-  .handler(async (request) => {
-    const user = await getUserStatement.get({ userId: request.data.userId });
-    if (!user) {
-      throw new Error("User not found");
-    }
-    return user;
+export const getUserFn = createServerFn({ method: "GET" }).handler(async () => {
+  const request = getRequest?.();
+  const session = await auth.api.getSession({
+    headers: request?.headers,
   });
+  if (!session) throw new Error("Unauthorized");
+  const userId = session.user.id;
+  const user = await getUserStatement.get({ userId });
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
+});
 
 export const getCustomerPortalFn = createServerFn({ method: "GET" })
   .inputValidator(

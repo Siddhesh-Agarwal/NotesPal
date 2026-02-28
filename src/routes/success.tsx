@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import { motion } from "motion/react";
@@ -7,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -23,22 +23,28 @@ export const Route = createFileRoute("/success")({
 });
 
 function RouteComponent() {
-  const { user, isLoaded } = useUser();
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
+  const user = session?.user;
   const navigate = useNavigate();
   const { checkout_id } = Route.useSearch();
 
   useEffect(() => {
-    if ((isLoaded && !user) || checkout_id === undefined) {
+    if ((!isSessionPending && !session) || checkout_id === undefined) {
       navigate({ to: "/" });
     }
-  }, [user, navigate, checkout_id, isLoaded]);
+  }, [session, navigate, checkout_id, isSessionPending]);
 
-  if (!isLoaded) {
+  if (isSessionPending) {
     return (
-      <div className="bg-background grid place-items-center">
+      <div className="bg-background grid place-items-center h-screen">
         <Spinner />
       </div>
     );
+  }
+
+  if (!session) {
+    return null;
   }
 
   return (
@@ -55,7 +61,7 @@ function RouteComponent() {
           </div>
 
           <CardContent className="p-0">
-            <h1 className="text-2xl md:text-3xl font-semibold">
+            <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
               Thanks for subscribing!
             </h1>
             <p className="mt-2 text-sm text-muted-foreground max-w-xl mx-auto">
@@ -64,13 +70,11 @@ function RouteComponent() {
               If you provided an email, we've sent a confirmation below.
             </p>
 
-            {user?.primaryEmailAddress && (
-              <div className="mt-4 inline-flex items-center gap-3 rounded-full border px-4 py-2">
+            {user?.email && (
+              <div className="mt-4 inline-flex items-center gap-3 rounded-full border px-4 py-2 border-border">
                 <Mail className="h-4 w-4 opacity-80" />
-                <span className="text-sm">
-                  {user.primaryEmailAddress.emailAddress}
-                </span>
-                <Badge className="ml-2 bg-green-500 text-white">
+                <span className="text-sm">{user.email}</span>
+                <Badge className="ml-2 bg-green-500 text-white border-none">
                   Confirmed
                 </Badge>
               </div>

@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useStore } from "@tanstack/react-store";
@@ -10,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { getCheckoutSessionFn, getUserFn } from "@/functions";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { store } from "@/store";
 
@@ -18,7 +18,9 @@ export const Route = createFileRoute("/auth/checkout")({
 });
 
 function RouteComponent() {
-  const { user, isLoaded } = useUser();
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
+  const user = session?.user;
   const navigate = useNavigate();
   const storeState = useStore(store);
 
@@ -26,7 +28,7 @@ function RouteComponent() {
   const { isLoading: isLoadingUser } = useQuery({
     queryKey: ["user", user?.id],
     queryFn: () =>
-      getUserFn({ data: { userId: user?.id ?? "" } }).then((val) => {
+      getUserFn().then((val) => {
         if (!val) {
           throw new Error("Failed to get user");
         }
@@ -51,10 +53,10 @@ function RouteComponent() {
   });
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (isSessionPending) return;
 
     // Redirect to sign-in if not authenticated
-    if (!user) {
+    if (!session) {
       navigate({ to: "/auth/sign-in" });
       return;
     }
@@ -63,7 +65,7 @@ function RouteComponent() {
     if (storeState?.subscribedTill && storeState.subscribedTill > new Date()) {
       navigate({ to: "/notes" });
     }
-  }, [user, isLoaded, navigate, storeState?.subscribedTill]);
+  }, [session, isSessionPending, navigate, storeState?.subscribedTill]);
 
   // Redirect to checkout URL when available
   useEffect(() => {
@@ -72,7 +74,7 @@ function RouteComponent() {
     }
   }, [checkoutData?.checkout_url]);
 
-  if (!isLoaded || isLoadingUser) {
+  if (isSessionPending || isLoadingUser) {
     return (
       <div className="bg-background grid place-items-center h-screen">
         <div className="flex flex-col gap-2 text-foreground items-center">
@@ -83,7 +85,7 @@ function RouteComponent() {
     );
   }
 
-  if (!user) {
+  if (!session) {
     return null; // Will redirect via useEffect
   }
 
@@ -107,7 +109,7 @@ function RouteComponent() {
           </div>
 
           <CardContent className="p-0">
-            <h1 className="text-2xl md:text-3xl font-semibold">
+            <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
               {isLoadingCheckout
                 ? "Preparing your checkout..."
                 : checkoutError
@@ -133,12 +135,12 @@ function RouteComponent() {
               )}
             </p>
 
-            {user?.primaryEmailAddress && (
-              <div className="mt-4 inline-flex items-center gap-3 rounded-full border px-4 py-2">
-                <span className="text-sm">
-                  {user.primaryEmailAddress.emailAddress}
-                </span>
-                <Badge className="ml-2 bg-green-500 text-white">Verified</Badge>
+            {user?.email && (
+              <div className="mt-4 inline-flex items-center gap-3 rounded-full border px-4 py-2 border-border">
+                <span className="text-sm">{user.email}</span>
+                <Badge className="ml-2 bg-green-500 text-white border-none">
+                  Verified
+                </Badge>
               </div>
             )}
 

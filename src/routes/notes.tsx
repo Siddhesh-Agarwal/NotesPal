@@ -1,4 +1,3 @@
-import { useClerk } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useStore } from "@tanstack/react-store";
@@ -46,6 +45,7 @@ import {
 } from "@/functions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { queryClient } from "@/integrations/query";
+import { authClient } from "@/lib/auth-client";
 import { getAvatarUrl } from "@/lib/avatar";
 import { store } from "@/store";
 
@@ -54,11 +54,14 @@ export const Route = createFileRoute("/notes")({
 });
 
 function RouteComponent() {
-  const { signOut, isSignedIn, user } = useClerk();
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
+  const user = session?.user;
   const storeState = useStore(store);
-  const emailAddress = user?.primaryEmailAddress?.emailAddress;
+  const emailAddress = user?.email;
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
   const {
     data: notes,
     status: notesStatus,
@@ -66,13 +69,14 @@ function RouteComponent() {
     error: notesError,
   } = useQuery({
     queryKey: ["notes", user?.id],
-    queryFn: () => getNotesFn({ data: { userId: user?.id ?? "" } }),
+    queryFn: () => getNotesFn(),
     enabled: !!user?.id,
   });
+
   useQuery({
     queryKey: ["user", user?.id],
     queryFn: () =>
-      getUserFn({ data: { userId: user?.id ?? "" } }).then((val) => {
+      getUserFn().then((val) => {
         if (!val) {
           toast.error("Failed to get user");
         }
@@ -80,23 +84,26 @@ function RouteComponent() {
       }),
     enabled: !!user?.id,
   });
+
   const { mutateAsync: deleteNoteAsync } = useMutation({
     mutationKey: ["deleteNote", user?.id],
     mutationFn: ({ id }: { id: string }) =>
-      deleteNoteFn({ data: { userId: user?.id ?? "", noteId: id } }),
+      deleteNoteFn({ data: { noteId: id } }),
     onSuccess: () => refetchNotes(),
   });
+
   const { mutateAsync: createNoteAsync, status: createNoteStatus } =
     useMutation({
       mutationKey: ["createNote", user?.id],
       mutationFn: () =>
-        createNoteFn({ data: { userId: user?.id ?? "" } }).then((val) => {
+        createNoteFn().then((val) => {
           if (!val) {
             toast.error("Failed to create note");
           }
         }),
       onSuccess: () => refetchNotes(),
     });
+
   const { data: customerPortal } = useQuery({
     queryKey: ["customerPortal", user?.id],
     queryFn: () =>
@@ -108,6 +115,7 @@ function RouteComponent() {
       !!storeState?.subscribedTill &&
       storeState.subscribedTill > new Date(),
   });
+
   const { data: checkoutData } = useQuery({
     queryKey: ["checkout", user?.id],
     queryFn: () =>
@@ -126,15 +134,27 @@ function RouteComponent() {
     await notesRefetch();
   }
 
-  if (!isSignedIn) {
+  if (isSessionPending) {
+    return (
+      <div className="min-h-screen bg-background flex justify-center items-center h-full">
+        <div className="flex gap-2 text-foreground items-center">
+          <Spinner />
+          <span className="text-xl">Checking session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
     navigate({ to: "/auth/sign-in" });
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto h-full">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800">My Notes</h1>
+          <h1 className="text-4xl font-bold text-foreground">My Notes</h1>
           <div className="flex gap-4">
             <ButtonGroup>
               <Button
@@ -165,7 +185,7 @@ function RouteComponent() {
                 <Avatar className="outline">
                   <AvatarImage src={getAvatarUrl({ email: emailAddress })} />
                   <AvatarFallback>
-                    {`${user?.firstName?.charAt(0) ?? ""}${user?.lastName?.charAt(0) ?? ""}`.toUpperCase()}
+                    {user?.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
@@ -198,7 +218,7 @@ function RouteComponent() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="gap-2"
-                  onClick={async () => await signOut()}
+                  onClick={async () => await authClient.signOut()}
                 >
                   <LogOutIcon />
                   Logout

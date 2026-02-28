@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from ".";
-import { notesTable, userTable } from "./schema";
+import { notes as notesTable, user as userTable } from "./schema";
 
 export const getUserNotesStatement = db
   .select()

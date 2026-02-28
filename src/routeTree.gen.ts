@@ -19,10 +19,7 @@ import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as AuthCheckoutRouteImport } from './routes/auth/checkout'
-import { Route as ApiCustomerPortalRouteImport } from './routes/api/customer-portal'
-import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
-import { Route as ApiWebhooksDodopaymentsRouteImport } from './routes/api/webhooks/dodopayments'
-import { Route as ApiWebhooksClerkRouteImport } from './routes/api/webhooks/clerk'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
 const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
   id: '/terms-and-conditions',
@@ -74,24 +71,9 @@ const AuthCheckoutRoute = AuthCheckoutRouteImport.update({
   path: '/auth/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCustomerPortalRoute = ApiCustomerPortalRouteImport.update({
-  id: '/api/customer-portal',
-  path: '/api/customer-portal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
-  id: '/api/checkout',
-  path: '/api/checkout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWebhooksDodopaymentsRoute = ApiWebhooksDodopaymentsRouteImport.update({
-  id: '/api/webhooks/dodopayments',
-  path: '/api/webhooks/dodopayments',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWebhooksClerkRoute = ApiWebhooksClerkRouteImport.update({
-  id: '/api/webhooks/clerk',
-  path: '/api/webhooks/clerk',
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -102,14 +84,11 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
-  '/api/checkout': typeof ApiCheckoutRoute
-  '/api/customer-portal': typeof ApiCustomerPortalRoute
   '/auth/checkout': typeof AuthCheckoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
-  '/api/webhooks/dodopayments': typeof ApiWebhooksDodopaymentsRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,14 +97,11 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
-  '/api/checkout': typeof ApiCheckoutRoute
-  '/api/customer-portal': typeof ApiCustomerPortalRoute
   '/auth/checkout': typeof AuthCheckoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
-  '/api/webhooks/dodopayments': typeof ApiWebhooksDodopaymentsRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -135,14 +111,11 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/success': typeof SuccessRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
-  '/api/checkout': typeof ApiCheckoutRoute
-  '/api/customer-portal': typeof ApiCustomerPortalRoute
   '/auth/checkout': typeof AuthCheckoutRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/note/$noteId': typeof NoteNoteIdRoute
-  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
-  '/api/webhooks/dodopayments': typeof ApiWebhooksDodopaymentsRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -153,14 +126,11 @@ export interface FileRouteTypes {
     | '/profile'
     | '/success'
     | '/terms-and-conditions'
-    | '/api/checkout'
-    | '/api/customer-portal'
     | '/auth/checkout'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
-    | '/api/webhooks/clerk'
-    | '/api/webhooks/dodopayments'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -169,14 +139,11 @@ export interface FileRouteTypes {
     | '/profile'
     | '/success'
     | '/terms-and-conditions'
-    | '/api/checkout'
-    | '/api/customer-portal'
     | '/auth/checkout'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
-    | '/api/webhooks/clerk'
-    | '/api/webhooks/dodopayments'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
@@ -185,14 +152,11 @@ export interface FileRouteTypes {
     | '/profile'
     | '/success'
     | '/terms-and-conditions'
-    | '/api/checkout'
-    | '/api/customer-portal'
     | '/auth/checkout'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/note/$noteId'
-    | '/api/webhooks/clerk'
-    | '/api/webhooks/dodopayments'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -202,14 +166,11 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SuccessRoute: typeof SuccessRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
-  ApiCheckoutRoute: typeof ApiCheckoutRoute
-  ApiCustomerPortalRoute: typeof ApiCustomerPortalRoute
   AuthCheckoutRoute: typeof AuthCheckoutRoute
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   NoteNoteIdRoute: typeof NoteNoteIdRoute
-  ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute
-  ApiWebhooksDodopaymentsRoute: typeof ApiWebhooksDodopaymentsRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -284,32 +245,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/customer-portal': {
-      id: '/api/customer-portal'
-      path: '/api/customer-portal'
-      fullPath: '/api/customer-portal'
-      preLoaderRoute: typeof ApiCustomerPortalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/checkout': {
-      id: '/api/checkout'
-      path: '/api/checkout'
-      fullPath: '/api/checkout'
-      preLoaderRoute: typeof ApiCheckoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/webhooks/dodopayments': {
-      id: '/api/webhooks/dodopayments'
-      path: '/api/webhooks/dodopayments'
-      fullPath: '/api/webhooks/dodopayments'
-      preLoaderRoute: typeof ApiWebhooksDodopaymentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/webhooks/clerk': {
-      id: '/api/webhooks/clerk'
-      path: '/api/webhooks/clerk'
-      fullPath: '/api/webhooks/clerk'
-      preLoaderRoute: typeof ApiWebhooksClerkRouteImport
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -322,14 +262,11 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SuccessRoute: SuccessRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
-  ApiCheckoutRoute: ApiCheckoutRoute,
-  ApiCustomerPortalRoute: ApiCustomerPortalRoute,
   AuthCheckoutRoute: AuthCheckoutRoute,
   AuthSignInRoute: AuthSignInRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   NoteNoteIdRoute: NoteNoteIdRoute,
-  ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
-  ApiWebhooksDodopaymentsRoute: ApiWebhooksDodopaymentsRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

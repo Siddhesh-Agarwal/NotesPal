@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -28,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TAPE_COLORS } from "@/data";
 import { getNoteFn, updateNoteFn } from "@/functions";
 import { queryClient } from "@/integrations/query";
+import { authClient } from "@/lib/auth-client";
 import type { Note } from "@/types";
 
 export const Route = createFileRoute("/note/$noteId")({
@@ -36,24 +36,29 @@ export const Route = createFileRoute("/note/$noteId")({
 
 function RouteComponent() {
   const { noteId } = Route.useParams();
-  const { isSignedIn, isLoaded, user } = useUser();
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
+  const user = session?.user;
   const userId = user?.id;
+  const navigate = useNavigate();
+
   const {
     data,
     status: noteStatus,
     error: noteError,
   } = useQuery({
     queryKey: ["note", noteId],
-    queryFn: () => getNoteFn({ data: { userId: userId ?? "", noteId } }),
+    queryFn: () => getNoteFn({ data: { noteId } }),
     enabled: !!noteId && !!userId,
   });
+
   const {
     mutate: updateNote,
-    isPending,
+    isPending: isSaving,
     error: saveError,
   } = useMutation({
     mutationFn: (note: { content: string; tapeColor: string }) =>
-      updateNoteFn({ data: { noteId, userId: userId ?? "", note } }),
+      updateNoteFn({ data: { noteId, note } }),
     onSuccess: () => {
       pendingUpdateRef.current = null;
       queryClient.invalidateQueries({ queryKey: ["note", noteId] }).then(() => {
@@ -61,7 +66,7 @@ function RouteComponent() {
       });
     },
   });
-  const navigate = useNavigate();
+
   const [note, setNote] = useState<Note | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -127,7 +132,7 @@ function RouteComponent() {
     setNote((prev) => (prev ? { ...prev, tapeColor: color } : null));
   }
 
-  if (noteStatus === "pending" || !isLoaded) {
+  if (isSessionPending || noteStatus === "pending") {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
         <div className="flex flex-col gap-2 text-foreground items-center">
@@ -138,15 +143,12 @@ function RouteComponent() {
     );
   }
 
-  if (!isSignedIn) {
+  if (!session) {
     navigate({ to: "/auth/sign-in" });
+    return null;
   }
 
-  if (!userId) {
-    return <NotFoundPage backTo="/" />;
-  }
-
-  if (note === null) {
+  if (note === null && noteStatus !== "error") {
     return <NotFoundPage backTo="/notes" />;
   }
 
@@ -159,6 +161,9 @@ function RouteComponent() {
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{noteError.message}</AlertDescription>
           </Alert>
+          <Link to="/notes">
+            <Button variant="outline">Back to Notes</Button>
+          </Link>
         </div>
       </div>
     );
@@ -182,7 +187,7 @@ function RouteComponent() {
             </Button>
           </Link>
           <div className="flex gap-2 items-center">
-            {isPending && (
+            {isSaving && (
               <span className="text-sm text-muted-foreground flex items-center gap-2">
                 <Spinner className="w-4 h-4" />
                 Saving...
@@ -194,7 +199,7 @@ function RouteComponent() {
                   <PopoverTrigger asChild>
                     <Button
                       className="w-36"
-                      style={{ backgroundColor: note.tapeColor }}
+                      style={{ backgroundColor: note?.tapeColor }}
                     >
                       <PaletteIcon size={18} />
                       Tape Color
@@ -218,7 +223,7 @@ function RouteComponent() {
                 <Button
                   onClick={() => setIsPreview((val) => !val)}
                   className="w-36"
-                  style={{ backgroundColor: note.tapeColor }}
+                  style={{ backgroundColor: note?.tapeColor }}
                 >
                   {isPreview ? (
                     <>
@@ -246,18 +251,18 @@ function RouteComponent() {
         >
           <div
             className="absolute top-0 left-16 w-24 h-12 opacity-70 -translate-y-3"
-            style={{ backgroundColor: note.tapeColor }}
+            style={{ backgroundColor: note?.tapeColor }}
           />
           <div
             className="absolute top-0 left-0 w-3 h-full opacity-30"
-            style={{ backgroundColor: note.tapeColor }}
+            style={{ backgroundColor: note?.tapeColor }}
           />
 
           {isPreview ? (
-            <MarkdownPreview markdown={note.content} size="md" />
+            <MarkdownPreview markdown={note?.content ?? ""} size="md" />
           ) : (
             <Textarea
-              value={note.content}
+              value={note?.content ?? ""}
               onChange={handleContentChange}
               className="w-full h-full bg-transparent border-none outline-none focus-visible:ring-0 focus-visible:border-none focus:ring-0 shadow-none resize-none text-foreground font-mono"
               style={{

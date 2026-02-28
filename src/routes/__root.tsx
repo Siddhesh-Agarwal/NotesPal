@@ -1,5 +1,3 @@
-import { ClerkProvider } from "@clerk/tanstack-react-start";
-import { shadcn } from "@clerk/themes";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
@@ -81,7 +79,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         httpEquiv: "Content-Security-Policy",
         content:
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev; script-src-elem 'self' 'unsafe-inline' https://challenges.cloudflare.com https://*.clerk.accounts.dev; worker-src 'self' blob:; frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev; connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.com https://clerk-telemetry.com/v1/event;",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com; script-src-elem 'self' 'unsafe-inline' https://challenges.cloudflare.com; worker-src 'self' blob:; frame-src 'self' https://challenges.cloudflare.com; connect-src 'self';",
       },
     ],
     links: [
@@ -102,32 +100,26 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ClerkProvider
-          publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
-          appearance={{
-            theme: shadcn,
-          }}
-        >
-          {children}
-          <Toaster richColors position="bottom-right" />
-          {import.meta.env.DEV && (
-            <TanStackDevtools
-              config={{
-                position: "bottom-left",
-              }}
-              plugins={[
-                {
-                  name: "Tanstack Router",
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-                {
-                  name: "Tanstack Query",
-                  render: <ReactQueryDevtoolsPanel />,
-                },
-              ]}
-            />
-          )}
-        </ClerkProvider>
+        {children}
+        <Toaster richColors position="bottom-right" />
+        {import.meta.env.DEV && (
+          <TanStackDevtools
+            config={{
+              position: "bottom-left",
+            }}
+            plugins={[
+              {
+                name: "Tanstack Router",
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+              {
+                name: "Tanstack Query",
+                render: <ReactQueryDevtoolsPanel />,
+              },
+            ]}
+          />
+        )}
+
         <Scripts />
       </body>
     </html>

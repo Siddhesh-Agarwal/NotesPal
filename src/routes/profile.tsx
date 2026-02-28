@@ -1,6 +1,5 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { KeyRound, MoveLeft, Trash2, UserPen } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -35,6 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth-client";
 import { getAvatarUrl } from "@/lib/avatar";
 import { passwordFormSchema, profileFormSchema } from "@/schema";
 
@@ -46,13 +46,14 @@ type ProfileFormData = z.infer<typeof profileFormSchema>;
 type PasswordFormData = z.infer<typeof passwordFormSchema>;
 
 function RouteComponent() {
-  const { user, isLoaded } = useUser();
-  const emailAddress = user?.primaryEmailAddress?.emailAddress;
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+  const emailAddress = user?.email;
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      firstName: user?.firstName ?? "",
-      lastName: user?.lastName ?? "",
+      firstName: user?.name?.split(" ")[0] ?? "",
+      lastName: user?.name?.split(" ")[1] ?? "",
       email: emailAddress ?? "",
     },
   });
@@ -64,9 +65,8 @@ function RouteComponent() {
       confirmNewPassword: "",
     },
   });
-  const navigate = useNavigate();
 
-  if (!isLoaded) {
+  if (isPending) {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
         <div className="flex flex-col gap-2 text-foreground items-center">
@@ -77,65 +77,50 @@ function RouteComponent() {
     );
   }
 
-  if (user === null) {
+  if (!user) {
     return <NotFoundPage backTo="/" />;
   }
 
   async function handleUpdateUser(data: ProfileFormData) {
-    if (!user) {
-      toast.error("User not found");
-      return;
-    }
-    await user
-      .update({
-        firstName: data.firstName,
-        lastName: data.lastName,
-      })
-      .then(() => {
-        toast.success("User updated");
-      })
-      .catch((error) => {
-        toast.error("Failed to update user", {
-          description: error.message,
-        });
-      });
+    await authClient.updateUser(
+      {
+        name: `${data.firstName} ${data.lastName}`,
+      },
+      {
+        onSuccess: () => {
+          toast.success("User updated");
+        },
+        onError: (ctx) => {
+          toast.error("Failed to update user", {
+            description: ctx.error.message,
+          });
+        },
+      },
+    );
   }
 
   async function handleUpdatePassword(values: PasswordFormData) {
-    if (!user) {
-      toast.error("User not found");
-      return;
-    }
-    await user
-      .updatePassword({
+    await authClient.changePassword(
+      {
         newPassword: values.newPassword,
         currentPassword: values.currentPassword,
-      })
-      .then(() => {
-        toast.success("Password updated successfully!");
-      })
-      .catch((err) => {
-        toast.error("Password update failed.", {
-          description:
-            err instanceof Error ? err.message : "Something went wrong.",
-        });
-      });
+        revokeOtherSessions: true,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Password updated successfully!");
+        },
+        onError: (ctx) => {
+          toast.error("Password update failed.", {
+            description: ctx.error.message,
+          });
+        },
+      },
+    );
   }
 
   async function handleAccountDelete() {
-    if (!user) {
-      toast.error("User not found");
-      return;
-    }
-    try {
-      await user.delete();
-      toast.success("Account deleted");
-      navigate({ to: "/" });
-    } catch (error) {
-      toast.error("Failed to delete account", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
+    toast.info("Account deletion not implemented in Better Auth client yet.");
   }
 
   return (
@@ -162,11 +147,11 @@ function RouteComponent() {
                     })}
                   />
                   <AvatarFallback>
-                    {`${user?.firstName?.charAt(0) ?? ""}${user?.lastName?.charAt(0) ?? ""}`.toUpperCase()}
+                    {user?.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-2">
-                  <span className="font-sans text-xl">{user.fullName}</span>
+                  <span className="font-sans text-xl">{user.name}</span>
                   <span className="font-sans text-sm">{emailAddress}</span>
                   <span className="font-mono text-sm">{user.id}</span>
                 </div>
@@ -314,9 +299,7 @@ function RouteComponent() {
                           />
 
                           <DialogFooter>
-                            <Button type="submit" disabled={!user}>
-                              Save
-                            </Button>
+                            <Button type="submit">Save</Button>
                           </DialogFooter>
                         </form>
                       </Form>

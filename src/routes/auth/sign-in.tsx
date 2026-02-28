@@ -1,11 +1,9 @@
-import { useSignIn, useSignUp, useUser } from "@clerk/tanstack-react-start";
-import type { EmailCodeFactor } from "@clerk/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { LogInIcon, MoveLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import type { z } from "zod/v4";
+import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +21,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth-client";
 import { signInSchema } from "@/schema";
 
 export const Route = createFileRoute("/auth/sign-in")({
@@ -39,67 +38,30 @@ function RouteComponent() {
       password: "",
     },
   });
-  const { signIn, isLoaded, setActive } = useSignIn();
-  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
-  const { signUp } = useSignUp();
+  const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
 
   async function onSubmit(values: FormSchema) {
-    if (!isLoaded) {
-      toast.error("Please wait for the app to load");
-      return;
-    }
-    try {
-      const result = await signIn.create({
-        strategy: "password",
+    await authClient.signIn.email(
+      {
+        email: values.email,
         password: values.password,
-        identifier: values.email,
-      });
-      if (result.status === "complete") {
-        await setActive({
-          session: result.createdSessionId,
-          navigate: async ({ session }) => {
-            if (session.currentTask) {
-              return;
-            }
-            navigate({ to: "/notes" });
-          },
-        });
-      } else if (result.status === "needs_second_factor") {
-        const emailCodeFactor = result.supportedSecondFactors?.find(
-          (factor): factor is EmailCodeFactor =>
-            factor.strategy === "email_code",
-        );
-        if (emailCodeFactor) {
-          await signIn.prepareSecondFactor({
-            strategy: "email_link",
-            redirectUrl: "/notes",
-            emailAddressId: values.email,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Signed in successfully");
+          navigate({ to: "/notes" });
+        },
+        onError: (ctx) => {
+          toast.error("Failed to sign in", {
+            description: ctx.error.message,
           });
-        }
-      }
-    } catch (err: any) {
-      if (err.errors[0].code === "form_identifier_not_found") {
-        // Start the sign-up process using the email and password provided
-        try {
-          await signUp?.create({
-            emailAddress: values.email,
-            password: values.password,
-          });
-
-          // Send the user an email with the verification code
-          await signUp?.prepareEmailAddressVerification({
-            strategy: "email_link",
-            redirectUrl: "/notes",
-          });
-        } catch {
-          toast.error("An error occurred while signing in");
-        }
-      }
-    }
+        },
+      },
+    );
   }
 
-  if (!isUserLoaded) {
+  if (isPending) {
     return (
       <div className="bg-background h-screen grid place-items-center">
         <div className="text-center">
@@ -110,7 +72,7 @@ function RouteComponent() {
     );
   }
 
-  if (isSignedIn) {
+  if (session) {
     navigate({ to: "/notes" });
   }
 
@@ -171,9 +133,7 @@ function RouteComponent() {
                   <Button
                     type="submit"
                     disabled={
-                      !isLoaded ||
-                      form.formState.isSubmitting ||
-                      !form.formState.isValid
+                      form.formState.isSubmitting || !form.formState.isValid
                     }
                   >
                     <LogInIcon />
@@ -189,9 +149,6 @@ function RouteComponent() {
                     </Link>
                   </p>
                 </div>
-
-                {/** biome-ignore lint/correctness/useUniqueElementIds: <https://clerk.com/docs/guides/development/custom-flows/authentication/bot-sign-up-protection> */}
-                <div id="clerk-captcha" data-cl-size="flexible" />
               </form>
             </Form>
           </CardContent>

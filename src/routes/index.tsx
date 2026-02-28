@@ -1,4 +1,3 @@
-import { SignedIn, SignedOut } from "@clerk/tanstack-react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import {
@@ -19,12 +18,14 @@ import {
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { metadata } from "@/data";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/")({
   component: App,
 });
 
 function App() {
+  const { data: session } = authClient.useSession();
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="text-center mb-8 font-serif">
@@ -63,22 +64,21 @@ function App() {
 
       {/* Buttons */}
       <div className="mt-10 flex flex-row gap-4">
-        <SignedOut>
+        {!session ? (
           <Link to="/auth/sign-up">
             <Button variant="default" className="gap-2" size="lg">
               <Pencil />
               Start Writing
             </Button>
           </Link>
-        </SignedOut>
-        <SignedIn>
+        ) : (
           <Link to="/notes">
             <Button variant="default" className="gap-2" size="lg">
               <StickyNote />
               View Notes
             </Button>
           </Link>
-        </SignedIn>
+        )}
         <Link to="/explore" target="_blank">
           <Button variant="secondary" className="gap-2" size="lg">
             Explore More
