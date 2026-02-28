@@ -6,7 +6,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "build && wrangler deploy",
+    "deploy": "vite build && wrangler deploy",
     "format": "biome format --write",
     "lint": "biome lint",
     "lint:fix": "biome lint --write",
