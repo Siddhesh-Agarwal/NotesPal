@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -5,10 +6,15 @@ import {
   ArrowLeftIcon,
   EyeIcon,
   EyeOffIcon,
+  LockIcon,
   PaletteIcon,
+  ShieldCheckIcon,
+  UnlockIcon,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import z from "zod";
 import MarkdownPreview from "@/components/markdown-preview";
 import NotFoundPage from "@/components/page/not-found";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -18,6 +24,23 @@ import {
   ButtonGroupSeparator,
 } from "@/components/ui/button-group";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -25,22 +48,50 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { TAPE_COLORS } from "@/data";
-import { getNoteFn, updateNoteFn } from "@/functions";
+import { getNoteFn, getUserFn, updateNoteFn } from "@/functions";
 import { queryClient } from "@/integrations/query";
 import { authClient } from "@/lib/auth-client";
+import {
+  createEncryptedNote,
+  decryptNote,
+  deriveMasterKey,
+} from "@/lib/encrypt";
 import type { Note } from "@/types";
 
 export const Route = createFileRoute("/note/$noteId")({
   component: RouteComponent,
 });
 
+const formSchema = z.object({
+  password: z.string().min(1, "Password is required"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 function RouteComponent() {
   const { noteId } = Route.useParams();
   const { data: session, isPending: isSessionPending } =
     authClient.useSession();
-  const user = session?.user;
-  const userId = user?.id;
+  const sessionUser = session?.user;
   const navigate = useNavigate();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { password: "" },
+  });
+
+  function onSubmit(values: FormValues) {
+    handlePasswordSubmit(values.password);
+  }
+
+  const [masterKey, setMasterKey] = useState<CryptoKey | null>(null);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+
+  const { data: dbUser, isPending: isUserPending } = useQuery({
+    queryKey: ["user", sessionUser?.id],
+    queryFn: () => getUserFn(),
+    enabled: !!sessionUser?.id,
+  });
 
   const {
     data,
@@ -49,7 +100,7 @@ function RouteComponent() {
   } = useQuery({
     queryKey: ["note", noteId],
     queryFn: () => getNoteFn({ data: { noteId } }),
-    enabled: !!noteId && !!userId,
+    enabled: !!noteId && !!sessionUser?.id,
   });
 
   const {
@@ -57,8 +108,12 @@ function RouteComponent() {
     isPending: isSaving,
     error: saveError,
   } = useMutation({
-    mutationFn: (note: { content: string; tapeColor: string }) =>
-      updateNoteFn({ data: { noteId, note } }),
+    mutationFn: (noteUpdate: {
+      content: string;
+      tapeColor: string;
+      encryptedKey?: string | null;
+      iv?: string | null;
+    }) => updateNoteFn({ data: { noteId, note: noteUpdate } }),
     onSuccess: () => {
       pendingUpdateRef.current = null;
       queryClient.invalidateQueries({ queryKey: ["note", noteId] }).then(() => {
@@ -70,23 +125,98 @@ function RouteComponent() {
   const [note, setNote] = useState<Note | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingUpdateRef = useRef<Pick<Note, "content" | "tapeColor"> | null>(
-    null,
+  const pendingUpdateRef = useRef<Pick<
+    Note,
+    "content" | "tapeColor" | "encryptedKey" | "iv"
+  > | null>(null);
+
+  const decryptAndSetNote = useCallback(
+    async (encryptedNote: Note, key: CryptoKey) => {
+      setIsDecrypting(true);
+      try {
+        if (encryptedNote.encryptedKey === null || encryptedNote.iv === null) {
+          throw new Error("Cannot decrypt a note that is not encrypted");
+        }
+        const decryptedContent = await decryptNote(
+          encryptedNote.content,
+          encryptedNote.encryptedKey,
+          encryptedNote.iv,
+          key,
+        );
+        setNote({ ...encryptedNote, content: decryptedContent });
+      } catch (err) {
+        console.error(err);
+        toast.error("Invalid master password or corrupted note data.");
+        setShowPasswordDialog(true);
+      } finally {
+        setIsDecrypting(false);
+      }
+    },
+    [],
   );
 
-  // Initialize note from query data
-  useEffect(() => {
-    if (data && !pendingUpdateRef.current) {
-      setNote(data);
+  async function handlePasswordSubmit(password: string) {
+    if (!dbUser?.salt || !password) return;
+
+    try {
+      setIsDecrypting(true);
+      const saltBuffer = new Uint8Array(
+        atob(dbUser.salt)
+          .split("")
+          .map((c) => c.charCodeAt(0)),
+      );
+      const key = await deriveMasterKey({
+        password,
+        salt: saltBuffer,
+      });
+      setMasterKey(key);
+      setShowPasswordDialog(false);
+
+      if (data?.encryptedKey && data?.iv) {
+        await decryptAndSetNote(data, key);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to derive master key");
+    } finally {
+      setIsDecrypting(false);
     }
-  }, [data]);
+  }
+
+  // Initialize note from query data and decrypt if needed
+  useEffect(() => {
+    if (data) {
+      if (data.encryptedKey && data.iv) {
+        if (masterKey) {
+          decryptAndSetNote(data, masterKey);
+        } else {
+          setShowPasswordDialog(true);
+          setNote(data); // Set the encrypted note for now
+        }
+      } else {
+        setNote(data);
+      }
+    }
+  }, [data, masterKey, decryptAndSetNote]);
 
   // Debounced save with 1 second delay
   useEffect(() => {
-    if (!note || !data) return;
+    if (!note || !data || isDecrypting) return;
+
+    // Don't save if note is still encrypted and we're waiting for password
+    if (note.encryptedKey && !masterKey) return;
 
     // Check if note actually changed
-    if (note.content === data.content && note.tapeColor === data.tapeColor) {
+    const hasContentChanged = note.content !== data.content;
+    const hasColorChanged = note.tapeColor !== data.tapeColor;
+    const isNowEncrypted = !!note.encryptedKey;
+    const wasEncrypted = !!data.encryptedKey;
+
+    if (
+      !hasContentChanged &&
+      !hasColorChanged &&
+      isNowEncrypted === wasEncrypted
+    ) {
       return;
     }
 
@@ -95,17 +225,35 @@ function RouteComponent() {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Store pending update
-    pendingUpdateRef.current = {
-      content: note.content,
-      tapeColor: note.tapeColor,
-    };
-
     // Set new timeout
-    saveTimeoutRef.current = setTimeout(() => {
-      if (pendingUpdateRef.current) {
-        updateNote(pendingUpdateRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      let updatePayload = {
+        content: note.content,
+        tapeColor: note.tapeColor,
+        encryptedKey: note.encryptedKey,
+        iv: note.iv,
+      };
+
+      if (masterKey && (hasContentChanged || !wasEncrypted)) {
+        // Encrypt content before sending to server
+        const { encryptedContent, encryptedKey, iv } =
+          await createEncryptedNote({
+            content: note.content,
+            masterKey,
+          });
+        updatePayload = {
+          ...updatePayload,
+          content: encryptedContent,
+          encryptedKey,
+          iv,
+        };
+      } else if (!masterKey && wasEncrypted) {
+        // This shouldn't happen if UI prevents editing without masterKey
+        return;
       }
+
+      pendingUpdateRef.current = updatePayload;
+      updateNote(updatePayload);
     }, 1000);
 
     return () => {
@@ -113,7 +261,7 @@ function RouteComponent() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [note, data, updateNote]);
+  }, [note, data, masterKey, isDecrypting, updateNote]);
 
   // Save on unmount if there's a pending update
   useEffect(() => {
@@ -132,7 +280,30 @@ function RouteComponent() {
     setNote((prev) => (prev ? { ...prev, tapeColor: color } : null));
   }
 
-  if (isSessionPending || noteStatus === "pending") {
+  async function toggleEncryption() {
+    if (!masterKey) {
+      setShowPasswordDialog(true);
+      return;
+    }
+
+    if (note?.encryptedKey) {
+      // Disable encryption: note is already decrypted in state, just clear keys
+      setNote((prev) =>
+        prev ? { ...prev, encryptedKey: null, iv: null } : null,
+      );
+      toast.info(
+        "Encryption disabled for this note. It will be saved in plain text.",
+      );
+    } else {
+      // Enable encryption: mark it as encrypted (save will handle the actual encryption)
+      setNote((prev) =>
+        prev ? { ...prev, encryptedKey: "pending", iv: "pending" } : null,
+      );
+      toast.success("Encryption enabled for this note.");
+    }
+  }
+
+  if (isSessionPending || noteStatus === "pending" || isUserPending) {
     return (
       <div className="bg-background flex justify-center items-center h-screen">
         <div className="flex flex-col gap-2 text-foreground items-center">
@@ -169,9 +340,50 @@ function RouteComponent() {
     );
   }
 
+  const isEncrypted = !!note?.encryptedKey;
+  const isLocked = isEncrypted && !masterKey;
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
+        <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enter Master Password</DialogTitle>
+              <DialogDescription>
+                Your master password is required to encrypt or decrypt this
+                note. It is never sent to our servers.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Master Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Your secret passphrase"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="gap-2">
+                  <UnlockIcon />
+                  Unlock
+                </Button>
+              </form>
+            </Form>
+            <DialogFooter></DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {saveError && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircleIcon className="h-4 w-4" />
@@ -195,11 +407,27 @@ function RouteComponent() {
             )}
             <div className="relative">
               <ButtonGroup>
+                <Button
+                  onClick={toggleEncryption}
+                  variant={isEncrypted ? "default" : "outline"}
+                  className="w-12"
+                  title={
+                    isEncrypted ? "Encryption Enabled" : "Enable Encryption"
+                  }
+                >
+                  {isEncrypted ? (
+                    <ShieldCheckIcon size={18} className="text-green-400" />
+                  ) : (
+                    <LockIcon size={18} />
+                  )}
+                </Button>
+                <ButtonGroupSeparator />
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       className="w-36"
                       style={{ backgroundColor: note?.tapeColor }}
+                      disabled={isLocked}
                     >
                       <PaletteIcon size={18} />
                       Tape Color
@@ -224,6 +452,7 @@ function RouteComponent() {
                   onClick={() => setIsPreview((val) => !val)}
                   className="w-36"
                   style={{ backgroundColor: note?.tapeColor }}
+                  disabled={isLocked}
                 >
                   {isPreview ? (
                     <>
@@ -258,7 +487,19 @@ function RouteComponent() {
             style={{ backgroundColor: note?.tapeColor }}
           />
 
-          {isPreview ? (
+          {isLocked ? (
+            <div className="flex flex-col items-center justify-center h-full pt-20 text-muted-foreground">
+              <LockIcon size={48} className="mb-4" />
+              <p className="text-xl font-sans">This note is encrypted.</p>
+              <Button
+                onClick={() => setShowPasswordDialog(true)}
+                variant="link"
+                className="mt-2 text-primary"
+              >
+                Unlock with Master Password
+              </Button>
+            </div>
+          ) : isPreview ? (
             <MarkdownPreview markdown={note?.content ?? ""} size="md" />
           ) : (
             <Textarea

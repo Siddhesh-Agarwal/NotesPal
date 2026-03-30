@@ -13,3 +13,8 @@ count.txt
 todos.json
 .vscode
 drizzle
+
+# Claude
+.claude
+CLAUDE.md
+GEMINI.md

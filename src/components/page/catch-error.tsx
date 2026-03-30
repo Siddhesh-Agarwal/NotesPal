@@ -1,6 +1,6 @@
-import type { ErrorComponentProps } from "@tanstack/react-router";
 import {
   ErrorComponent,
+  type ErrorComponentProps,
   Link,
   rootRouteId,
   useMatch,
@@ -9,7 +9,7 @@ import {
 import { Home, MoveLeft, RefreshCcw } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 
-export function CatchBoundaryPage({ error }: ErrorComponentProps) {
+export default function CatchBoundaryPage({ error }: ErrorComponentProps) {
   const router = useRouter();
   const isRoot = useMatch({
     strict: false,

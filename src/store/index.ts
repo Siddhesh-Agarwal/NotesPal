@@ -1,5 +1,5 @@
 import { Store } from "@tanstack/react-store";
-import type { userTable } from "@/db/schema";
+import type { user as userTable } from "@/db/schema";
 
 export const store = new Store<
   | Pick<

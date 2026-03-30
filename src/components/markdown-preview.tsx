@@ -21,6 +21,7 @@ export default function MarkdownPreview({
         size !== "md" && "prose-sm",
         className,
       )}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: <only trusted markdown is parsed>
       dangerouslySetInnerHTML={{ __html: parseMarkdown(markdown) }}
     />
   );

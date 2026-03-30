@@ -13,7 +13,7 @@ export const user = sqliteTable("user", {
   lastName: text("last_name", { length: 100 }),
   customerId: text("customer_id", { length: 50 }),
   salt: text("salt", { length: 24 }),
-  subscribedTill: integer("subscribed_till", { mode: "timestamp" }),
+  subscribedTill: integer("subscribed_till", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
     .notNull(),
@@ -41,7 +41,8 @@ export const session = sqliteTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
   },
-  (table) => [index("session_userId_idx").on(table.userId)],
+  // @ts-expect-error
+  (table) => [index().on(table.userId)],
 );
 
 export const account = sqliteTable(
@@ -71,7 +72,8 @@ export const account = sqliteTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  // @ts-expect-error
+  (table) => [index().on(table.userId)],
 );
 
 export const verification = sqliteTable(
@@ -89,25 +91,34 @@ export const verification = sqliteTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
+  // @ts-expect-error
+  (table) => [index().on(table.identifier)],
 );
 
-export const notes = sqliteTable("notes", {
-  id: text("id", { length: 36 })
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text("user_id", { length: 50 })
-    .notNull()
-    .references(() => user.id),
-  content: text("content").notNull(),
-  tapeColor: text("tape_color", { length: 7 }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .$onUpdateFn(() => new Date())
-    .notNull(),
-});
+export const notes = sqliteTable(
+  "notes",
+  {
+    id: text("id", { length: 36 })
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    content: text("content").notNull(),
+    tapeColor: text("tape_color", { length: 7 }).notNull(),
+    encryptedKey: text("encrypted_key"),
+    iv: text("iv"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  // @ts-expect-error
+  (table) => [index().on(table.userId)],
+);
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
